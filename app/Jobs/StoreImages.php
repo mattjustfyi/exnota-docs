@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class StoreImages implements ShouldQueue
 {
@@ -12,26 +14,40 @@ class StoreImages implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct() {}
+    public function __construct()
+    {
+        Log::info('StoreImages job created');
+    }
 
     /**
      * Execute the job.
      */
     public function handle(): void
     {
-        //
         $directory = __DIR__;
-        $files = ['bruennhilde.jpg', 'morris.jpg']; // Replace with your actual filenames
+        $files = ['bruennhilde.jpg', 'morris.jpg'];
 
+        $s3Disk = Storage::disk('images');
         foreach ($files as $file) {
             $filePath = $directory . '/' . $file;
             if (is_file($filePath)) {
-                $size = filesize($filePath);
-                echo "File: $file, Size: $size bytes\n";
+                $success = $s3Disk->put($file, file_get_contents($filePath));
+                if (!$success) {
+                    Log::error("Failed to upload $file to S3");
+                    throw new \Exception("Failed to upload $file to S3");
+                }
+                Log::info("Uploaded $file to S3");
+                /**
+                 * @disregard - disk->url() does exist but intelephense does not recognize it
+                 */
+                Log::info($s3Disk->url($file));
             } else {
-                echo "File: $file does not exist\n";
+                Log::error("File: $file does not exist");
+                throw new \Exception("File: $file does not exist");
             }
         }
+
+        Log::info('StoreImages job handled');
         echo 'got image info';
     }
 }
