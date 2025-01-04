@@ -12,8 +12,14 @@ class StoreImages implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct()
+    public function __construct() {}
+
+    /**
+     * Execute the job.
+     */
+    public function handle(): void
     {
+        //
         $directory = __DIR__;
         $files = ['bruennhilde.jpg', 'morris.jpg']; // Replace with your actual filenames
 
@@ -26,14 +32,6 @@ class StoreImages implements ShouldQueue
                 echo "File: $file does not exist\n";
             }
         }
-        dd('got image info');
-    }
-
-    /**
-     * Execute the job.
-     */
-    public function handle(): void
-    {
-        //
+        echo 'got image info';
     }
 }
