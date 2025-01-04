@@ -40,7 +40,14 @@ class StoreImages implements ShouldQueue
                 /**
                  * @disregard - disk->url() does exist but intelephense does not recognize it
                  */
-                Log::info($s3Disk->url($file));
+                $permaURL = $s3Disk->url($file);
+                Log::info($permaURL);
+
+                /**
+                 * @disregard - disk->url() does exist but intelephense does not recognize it
+                 */
+                $tempURL = $s3Disk->temporaryUrl($file, now()->addMinutes(5));
+                Log::info($tempURL);
             } else {
                 Log::error("File: $file does not exist");
                 throw new \Exception("File: $file does not exist");
