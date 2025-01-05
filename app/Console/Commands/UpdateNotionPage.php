@@ -63,6 +63,29 @@ class UpdateNotionPage extends Command
         // 4. Get markdown
         $markdown = file_get_contents(__DIR__ . '/onboarding.md');
 
+        preg_match_all('/!\[.*?\]\(\.\/(.*?)\)/', $markdown, $matches);
+        $images = $matches[1];
+
+        foreach ($images as $image) {
+            $filePath = __DIR__ . '/' . $image;
+            if (!file_exists($filePath)) {
+                Log::error("File $filePath does not exist");
+                continue;
+            }
+
+            $s3Disk = Storage::disk('images');
+            $success = $s3Disk->put($image, file_get_contents($filePath));
+            if (!$success) {
+                Log::error("Failed to upload $filePath to S3");
+                throw new \Exception("Failed to upload $filePath to S3");
+            }
+            Log::info("Uploaded $filePath to S3");
+
+            $tempURL = $s3Disk->temporaryUrl($image, now()->addSeconds(10));
+            // TODO: Should make sure this only replaces the expected instance.
+            $markdown = str_replace('./' . $image, $tempURL, $markdown);
+        }
+
         // Call node to update
         $cmd = 'node cmd/notion-export/index.js --page 171944fbb2bc8034838af33758b0aedb --content "' . $markdown . '" --token ' . env('NOTION_AUTH_TOKEN');
         Process::fromShellCommandline($cmd)->run(function ($type, $data) {
