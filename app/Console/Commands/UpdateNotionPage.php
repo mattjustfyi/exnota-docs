@@ -65,7 +65,7 @@ class UpdateNotionPage extends Command
         Log::info($markdown);
 
         // Call node to update
-        $cmd = 'node cmd/notion-export/index.js --page 171944fbb2bc8034838af33758b0aedb --token ' . env('NOTION_AUTH_TOKEN');
+        $cmd = 'node cmd/notion-export/index.js --page 171944fbb2bc8034838af33758b0aedb --content "' . $markdown . '" --token ' . env('NOTION_AUTH_TOKEN');
         Process::fromShellCommandline($cmd)->run(function ($type, $data) {
             $this->info($data);
         });

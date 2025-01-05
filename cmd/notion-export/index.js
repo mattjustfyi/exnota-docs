@@ -1,34 +1,38 @@
-const {markdownToBlocks, markdownToRichText} = require('@tryfabric/martian');
+const { markdownToBlocks, markdownToRichText } = require("@tryfabric/martian");
 // const arg = require('arg');
-const { program } = require('commander');
+const { program } = require("commander");
+const { Client } = require("@notionhq/client");
 
-console.log('run!')
+(async () => {
+    console.log("run!");
 
-// const args = arg({
-// 	'--token': String,
-// 	'--page': String,
-// });
-program
-  .option('--token <string>')
-  .option('--page <string>');
+    // const args = arg({
+    // 	'--token': String,
+    // 	'--page': String,
+    // });
+    program
+        .option("--token <string>")
+        .option("--content <string>")
+        .option("--page <string>");
 
+    program.parse();
+    const options = program.opts();
 
-program.parse();
-const options = program.opts();
-console.log(options);
+    const token = options.token;
+    const page = options.page;
 
-const token = options.token;
-const page = options.page;
+    const result = markdownToBlocks(options.content);
+    console.log(result);
 
-console.log(token, page);
+    // Initializing a client
+    const notion = new Client({
+        auth: token,
+    });
 
-
-const result = markdownToBlocks(`
-hello _world_ 
-*** 
-## heading2
-* [x] todo
-`);
-
-
-console.log(result);
+    console.log("sending to notion");
+    const response = await notion.blocks.children.append({
+        block_id: page,
+        children: result,
+    });
+    console.log(response);
+})();
