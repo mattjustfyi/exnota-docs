@@ -4,7 +4,6 @@ const { program } = require("commander");
 const { Client } = require("@notionhq/client");
 
 (async () => {
-    console.log("run!");
 
     // const args = arg({
     // 	'--token': String,
@@ -21,18 +20,35 @@ const { Client } = require("@notionhq/client");
     const token = options.token;
     const page = options.page;
 
-    const result = markdownToBlocks(options.content);
-    console.log(result);
+    const blocks = markdownToBlocks(options.content);
+
+    // Extract h1
+    const heading1Index = blocks.findIndex(
+        (block) => block.type === "heading_1"
+    );
+    let heading1Block;
+    if (heading1Index !== -1) {
+        heading1Block = blocks.splice(heading1Index, 1)[0];
+    }
 
     // Initializing a client
     const notion = new Client({
         auth: token,
     });
 
-    console.log("sending to notion");
-    const response = await notion.blocks.children.append({
-        block_id: page,
-        children: result,
+    console.log("Updating title in Notion");
+    const pagePropResp = await notion.pages.update({
+        page_id: page,
+        properties: {
+            "title": {
+                type: "title",
+                title: heading1Block.heading_1.rich_text,
+            },
+        },
     });
-    console.log(response);
+    console.log('Appending children in Notion');
+    const blockAppRes = await notion.blocks.children.append({
+        block_id: page,
+        children: blocks,
+    });
 })();

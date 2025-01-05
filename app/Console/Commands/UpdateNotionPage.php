@@ -62,7 +62,6 @@ class UpdateNotionPage extends Command
 
         // 4. Get markdown
         $markdown = file_get_contents(__DIR__ . '/onboarding.md');
-        Log::info($markdown);
 
         // Call node to update
         $cmd = 'node cmd/notion-export/index.js --page 171944fbb2bc8034838af33758b0aedb --content "' . $markdown . '" --token ' . env('NOTION_AUTH_TOKEN');
@@ -70,7 +69,6 @@ class UpdateNotionPage extends Command
             $this->info($data);
         });
 
-        Log::info('StoreImages job handled');
-        echo 'got image info';
+        $this->info('Done!');
     }
 }
