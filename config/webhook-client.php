@@ -18,14 +18,14 @@ return [
             /*
              * The name of the header containing the signature.
              */
-            'signature_header_name' => 'Signature',
+            'signature_header_name' => 'X-Hub-Signature-256',
 
             /*
              *  This class will verify that the content of the signature header is valid.
              *
              * It should implement \Spatie\WebhookClient\SignatureValidator\SignatureValidator
              */
-            'signature_validator' => \Spatie\WebhookClient\SignatureValidator\DefaultSignatureValidator::class,
+            'signature_validator' => App\Jobs\GitPushWebhookValidator::class,
 
             /*
              * This class determines if the webhook call should be stored and processed.
@@ -49,16 +49,14 @@ return [
              *
              * To store all headers, set this value to `*`.
              */
-            'store_headers' => [
-
-            ],
+            'store_headers' => [],
 
             /*
              * The class name of the job that will process the webhook request.
              *
              * This should be set to a class that extends \Spatie\WebhookClient\Jobs\ProcessWebhookJob.
              */
-            'process_webhook_job' => '',
+            'process_webhook_job' => App\Jobs\GitPushWebhookJob::class,
         ],
     ],
 
