@@ -1,4 +1,4 @@
 curl -X POST \
     -H "Content-Type: application/json" \
     -d '{"code": "hihi"}' \
-    https://gxqnftt9rm.sharedwithexpose.com/webhooks/git-push
+    https://srwwfkxur1.sharedwithexpose.com/webhooks/git-push
