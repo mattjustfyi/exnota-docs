@@ -21,6 +21,7 @@ class RepositoryFactory extends Factory
     {
         return [
             'url' => $this->faker->url(),
+            'token' => $this->faker->word(),
         ];
     }
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('repositories', function (Blueprint $table) {
             $table->id();
             $table->text('url');
+            $table->string('token');
             $table->timestamps();
         });
     }

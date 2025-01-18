@@ -1,6 +1,7 @@
 models:
   Repository:
     url: text
+    token: string
     relationships:
       hasMany: Source
 
