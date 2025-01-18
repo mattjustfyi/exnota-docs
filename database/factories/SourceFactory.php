@@ -21,7 +21,7 @@ class SourceFactory extends Factory
     public function definition(): array
     {
         return [
-            'path' => $this->faker->text(),
+            'path' => $this->faker->filePath(),
             'repository_id' => Repository::factory(),
         ];
     }
