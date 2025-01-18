@@ -1,0 +1,16 @@
+models:
+  Repository:
+    url: text
+    relationships:
+      hasMany: Source
+
+  Source:
+    path: text
+    relationships:
+      belongsTo: Repository
+      hasMany: Document
+
+  Document:
+    path: text
+    relationships:
+      belongsTo: Source

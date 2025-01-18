@@ -1,0 +1,15 @@
+created:
+    - database/factories/RepositoryFactory.php
+    - database/factories/SourceFactory.php
+    - database/factories/DocumentFactory.php
+    - database/migrations/2025_01_18_034318_create_repositories_table.php
+    - database/migrations/2025_01_18_034319_create_sources_table.php
+    - database/migrations/2025_01_18_034320_create_documents_table.php
+    - app/Models/Repository.php
+    - app/Models/Source.php
+    - app/Models/Document.php
+models:
+    User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string nullable' }
+    Repository: { url: text, relationships: { hasMany: Source } }
+    Source: { path: text, relationships: { belongsTo: Repository, hasMany: Document } }
+    Document: { path: text, relationships: { belongsTo: Source } }
