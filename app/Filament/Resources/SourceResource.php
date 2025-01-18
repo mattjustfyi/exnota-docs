@@ -33,8 +33,10 @@ class SourceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('repository.id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('path')
+                    ->limit(30),
+                Tables\Columns\TextColumn::make('repository.url')
+                    ->limit(30)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
