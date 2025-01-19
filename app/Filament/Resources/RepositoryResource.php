@@ -23,6 +23,8 @@ class RepositoryResource extends Resource
                 Forms\Components\Textarea::make('url')
                     ->required()
                     ->columnSpanFull(),
+                Forms\Components\Textarea::make('token')
+                    ->required(),
             ]);
     }
 
