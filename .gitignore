@@ -21,3 +21,4 @@ yarn-error.log
 /.nova
 /.zed
 .DS_Store
+/tools/http-client.private.env.json

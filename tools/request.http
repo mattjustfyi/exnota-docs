@@ -1,4 +1,19 @@
+### Local webhook test
 curl -X POST \
     -H "Content-Type: application/json" \
     -d '{"code": "hihi"}' \
     https://srwwfkxur1.sharedwithexpose.com/webhooks/git-push
+
+### Github: Get list of files
+GET https://api.github.com/repos/mttschltz/exnota-docs/contents/tests/Data/Docs/OneLevel
+Accept: application/vnd.github+json
+Authorization: Bearer {{github_token}}
+X-GitHub-Api-Version: 2022-11-28
+
+
+### Github: Get file
+GET https://api.github.com/repos/mttschltz/exnota-docs/contents/tests/Data/Docs/OneLevel/README.md
+Accept: application/vnd.github+json
+Authorization: Bearer {{github_token}}
+X-GitHub-Api-Version: 2022-11-28
+
