@@ -53,5 +53,8 @@ class SaveFileJob implements ShouldQueue
         $json = $response->json();
         $downloadUrl = $json['download_url'];
         Log::info('file contents:'.$downloadUrl);
+
+        $content = file_get_contents($downloadUrl);
+        Log::info('file contents:'.$content);
     }
 }
