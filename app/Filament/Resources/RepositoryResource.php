@@ -14,6 +14,8 @@ class RepositoryResource extends Resource
 {
     protected static ?string $model = Repository::class;
 
+    protected static ?string $recordTitleAttribute = 'url';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form

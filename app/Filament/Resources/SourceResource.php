@@ -14,6 +14,8 @@ class SourceResource extends Resource
 {
     protected static ?string $model = Source::class;
 
+    protected static ?string $recordTitleAttribute = 'path';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
@@ -24,7 +26,7 @@ class SourceResource extends Resource
                     ->required()
                     ->columnSpanFull(),
                 Forms\Components\Select::make('repository_id')
-                    ->relationship('repository', 'id')
+                    ->relationship('repository', 'url')
                     ->required(),
             ]);
     }
