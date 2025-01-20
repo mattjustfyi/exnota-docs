@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->text('path');
+            $table->text('content');
             $table->foreignId('source_id');
             $table->timestamps();
         });

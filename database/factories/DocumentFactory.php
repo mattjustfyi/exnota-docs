@@ -22,21 +22,7 @@ class DocumentFactory extends Factory
     {
         return [
             'path' => $this->faker->filePath(),
-            /**
-             * The attributes that should be cast to native types.
-             *
-             * @var array
-             */
-            /**
-             * The attributes that should be cast to native types.
-             *
-             * @var array
-             */
-            /**
-             * The attributes that should be cast to native types.
-             *
-             * @var array
-             */
+            'content' => $this->faker->paragraphs(3, true),
             'source_id' => Source::factory(),
         ];
     }

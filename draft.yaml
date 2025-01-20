@@ -13,5 +13,6 @@ models:
 
   Document:
     path: text
+    content: text
     relationships:
       belongsTo: Source

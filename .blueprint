@@ -13,4 +13,4 @@ models:
     User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string nullable' }
     Repository: { url: text, token: string, relationships: { hasMany: Source } }
     Source: { path: text, relationships: { belongsTo: Repository, hasMany: Document } }
-    Document: { path: text, relationships: { belongsTo: Source } }
+    Document: { path: text, content: text, relationships: { belongsTo: Source } }
