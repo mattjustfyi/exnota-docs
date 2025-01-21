@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\Document;
 use App\Models\Source;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -56,5 +57,13 @@ class SaveFileJob implements ShouldQueue
 
         $content = file_get_contents($downloadUrl);
         Log::info('file contents:'.$content);
+
+        $document = Document::create([
+            'path' => $this->filePath,
+            'content' => $content,
+            'source_id' => $this->source->id,
+        ]);
+
+        Log::info('Document created', ['document' => $document]);
     }
 }
