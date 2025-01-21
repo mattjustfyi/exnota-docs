@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Repository;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,11 +16,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Matt',
+            'email' => 'email@matt.fyi',
+            'password' => Hash::make('password'),
+        ]);
+
+        /** @noinspection LaravelFunctionsInspection */
+        $repository = Repository::factory()->create([
+            'url' => 'https://api.github.com/repos/mttschltz/exnota-docs/contents',
+            'token' => env('GITHUB_TOKEN'),
+        ]);
+
+        $repository->sources()->create([
+            'path' => '/tests/Data/Docs/OneLevel',
         ]);
     }
 }
