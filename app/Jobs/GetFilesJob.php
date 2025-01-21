@@ -8,8 +8,10 @@ use App\Models\Source;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class GetFilesJob implements ShouldQueue
 {
@@ -31,11 +33,29 @@ class GetFilesJob implements ShouldQueue
      * Execute the job.
      *
      * @throws ConnectionException
+     * @throws Throwable
      */
     public function handle(): void
     {
         $filePaths = $this->getFilesInDir($this->source->repository->url, $this->source->path, 2);
         Log::info('filePaths', $filePaths);
+
+        $jobs = array_map(function ($filePath) {
+            return new SaveFileJob($this->source, $filePath);
+        }, $filePaths);
+        $batch = Bus::batch($jobs)->before(function () {
+            Log::info('Batch started');
+        })->progress(function () {
+            Log::info('Batch progress');
+        })->then(function () {
+            Log::info('Batch finished (then)');
+        })->catch(function () {
+            Log::error('Batch failed');
+        })->finally(function () {
+            Log::info('Batch finished (finally)');
+        })->dispatch();
+
+        Log::info('Dispatched batch ID: '.$batch->id);
     }
 
     /**

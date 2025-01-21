@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\Document;
 use App\Models\Source;
+use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\ConnectionException;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class SaveFileJob implements ShouldQueue
 {
-    use Queueable;
+    use Batchable, Queueable;
 
     private Source $source;
 
@@ -36,6 +37,10 @@ class SaveFileJob implements ShouldQueue
      */
     public function handle(): void
     {
+        if ($this->batch()->cancelled()) {
+            return;
+        }
+
         $githubToken = $this->source->repository->token; // Replace this with your actual GitHub token
 
         $path = $this->source->repository->url.'/'.$this->filePath;
