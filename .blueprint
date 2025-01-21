@@ -1,16 +1,24 @@
 created:
     - database/factories/RepositoryFactory.php
     - database/factories/SourceFactory.php
+    - database/factories/NotionWorkspaceFactory.php
+    - database/factories/NotionDatabaseFactory.php
     - database/factories/DocumentFactory.php
     - app/Models/Repository.php
     - app/Models/Source.php
+    - app/Models/NotionWorkspace.php
+    - app/Models/NotionDatabase.php
     - app/Models/Document.php
 updated:
     - database/migrations/2025_01_18_034318_create_repositories_table.php
     - database/migrations/2025_01_18_034319_create_sources_table.php
+    - database/migrations/2025_01_21_044713_create_notion_workspaces_table.php
+    - database/migrations/2025_01_21_044714_create_notion_databases_table.php
     - database/migrations/2025_01_18_034320_create_documents_table.php
 models:
     User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string nullable' }
     Repository: { url: text, token: string, relationships: { hasMany: Source } }
     Source: { path: text, relationships: { belongsTo: Repository, hasMany: Document } }
     Document: { path: text, content: text, relationships: { belongsTo: Source } }
+    NotionWorkspace: { name: string, token: string, relationships: { hasMany: NotionDatabase } }
+    NotionDatabase: { id: string, name: string, relationships: { belongsTo: NotionWorkspace } }

@@ -11,6 +11,19 @@ models:
       belongsTo: Repository
       hasMany: Document
 
+  NotionWorkspace:
+    name: string
+    token: string
+    relationships:
+      hasMany: NotionDatabase
+
+  NotionDatabase:
+    id: string
+    name: string
+    relationships:
+      belongsTo: NotionWorkspace
+
+
   Document:
     path: text
     content: text
