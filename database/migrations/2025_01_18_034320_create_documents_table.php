@@ -11,6 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->text('path');
@@ -18,6 +20,8 @@ return new class extends Migration
             $table->foreignId('source_id');
             $table->timestamps();
         });
+
+        Schema::enableForeignKeyConstraints();
     }
 
     /**

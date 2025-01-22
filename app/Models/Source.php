@@ -13,12 +13,18 @@ class Source extends Model
 
     protected $casts = [
         'id' => 'integer',
+        'notion_database_id' => 'integer',
         'repository_id' => 'integer',
     ];
 
     public function repository(): BelongsTo
     {
         return $this->belongsTo(Repository::class);
+    }
+
+    public function notionDatabase(): BelongsTo
+    {
+        return $this->belongsTo(NotionDatabase::class);
     }
 
     public function documents(): HasMany

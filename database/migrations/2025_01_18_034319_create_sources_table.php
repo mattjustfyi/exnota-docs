@@ -11,12 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         Schema::create('sources', function (Blueprint $table) {
             $table->id();
             $table->text('path');
+            $table->foreignId('notion_database_id')->nullable()->constrained();
             $table->foreignId('repository_id');
             $table->timestamps();
         });
+
+        Schema::enableForeignKeyConstraints();
     }
 
     /**

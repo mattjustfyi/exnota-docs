@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\NotionDatabase;
 use App\Models\Repository;
 use App\Models\Source;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,6 +23,7 @@ class SourceFactory extends Factory
     {
         return [
             'path' => $this->faker->filePath(),
+            'notion_database_id' => NotionDatabase::factory(),
             'repository_id' => Repository::factory(),
         ];
     }

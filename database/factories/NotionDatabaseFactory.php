@@ -21,6 +21,7 @@ class NotionDatabaseFactory extends Factory
     public function definition(): array
     {
         return [
+            'notion_id' => $this->faker->uuid(),
             'name' => $this->faker->name(),
             'notion_workspace_id' => NotionWorkspace::factory(),
         ];

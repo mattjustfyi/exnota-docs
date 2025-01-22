@@ -11,6 +11,7 @@ class NotionDatabase extends Model
     use HasFactory;
 
     protected $casts = [
+        'id' => 'integer',
         'notion_workspace_id' => 'integer',
     ];
 
