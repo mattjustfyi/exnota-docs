@@ -54,7 +54,8 @@ class CreatePageJob implements ShouldQueue
             'content' => $content,
         ]);
 
-        $cmd = 'node cmd/notion-export/create.js --page '.$databaseId.' --content "'.$content.'" --token '.$token;
+        $contentEncoded = str_replace('"', '\"', $content);
+        $cmd = 'node cmd/notion-export/create.js --page '.$databaseId.' --content "'.$contentEncoded.'" --token '.$token;
         Process::fromShellCommandline($cmd)->run(function ($type, $data) {
             if ($type === Process::ERR) {
                 Log::error($data);
