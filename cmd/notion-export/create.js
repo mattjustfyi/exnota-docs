@@ -36,19 +36,31 @@ const { Client } = require("@notionhq/client");
         auth: token,
     });
 
-    console.log("Updating title in Notion");
-    const pagePropResp = await notion.pages.update({
-        page_id: page,
+    console.log("Creating page in Notion");
+    const pagePropResp = await notion.pages.create({
+        parent:{
+            type: 'database_id',
+            database_id: page,
+        },
         properties: {
             "title": {
                 type: "title",
-                title: heading1Block.heading_1.rich_text,
+                title: heading1Block?.heading_1.rich_text ?? [
+                    {
+                        "type": "text",
+                        "text": {
+                            "content": "untitled",
+                        }
+                    }
+                ],
             },
         },
-    });
-    console.log('Appending children in Notion');
-    const blockAppRes = await notion.blocks.children.append({
-        block_id: page,
         children: blocks,
     });
+    console.log(pagePropResp);
+    // console.log('Appending children in Notion');
+    // const blockAppRes = await notion.blocks.children.append({
+    //     block_id: page,
+    //     children: blocks,
+    // });
 })();

@@ -53,7 +53,7 @@ class SaveFileJob implements ShouldQueue
 
         if (! $response->successful()) {
             Log::error('Failed to get file: '.$path);
-            $this->fail();
+            $this->release();
         }
 
         $json = $response->json();

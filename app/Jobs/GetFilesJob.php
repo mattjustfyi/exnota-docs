@@ -75,7 +75,7 @@ class GetFilesJob implements ShouldQueue
 
         if (! $response->successful()) {
             Log::error('Failed to get files in dir: '.$dirPath);
-            $this->fail();
+            $this->release();
         }
 
         $data = $response->json();
@@ -88,7 +88,7 @@ class GetFilesJob implements ShouldQueue
                 $filePaths[] = $item['path'];
             } else {
                 Log::error('Unknown item type: '.$item['type']);
-                $this->fail();
+                $this->release();
             }
         }
 

@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
+use Brd6\NotionSdkPhp\Client;
+use Brd6\NotionSdkPhp\ClientOptions;
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Brd6\NotionSdkPhp\Client;
-use Brd6\NotionSdkPhp\ClientOptions;
 use Symfony\Component\Process\Process;
 
 class UpdateNotionPage extends Command
@@ -31,7 +32,7 @@ class UpdateNotionPage extends Command
     public function handle()
     {
         // TODO: v1: No images, just update
-        $options = (new ClientOptions())
+        $options = (new ClientOptions)
             ->setAuth(env('NOTION_AUTH_TOKEN'));
 
         $notion = new Client($options);
@@ -42,7 +43,6 @@ class UpdateNotionPage extends Command
         foreach ($children->getResults() as $child) {
             $notion->blocks()->delete($child->getId());
         }
-
 
         // Save image
         // $filePath = __DIR__ . '/bruennhilde.jpg';
@@ -59,35 +59,35 @@ class UpdateNotionPage extends Command
         //  */
         // $tempURL = $s3Disk->temporaryUrl('bruennhilde.jpg', now()->addMinutes(5));
 
-
         // 4. Get markdown
-        $markdown = file_get_contents(__DIR__ . '/onboarding.md');
+        $markdown = file_get_contents(__DIR__.'/onboarding.md');
 
         preg_match_all('/!\[.*?\]\(\.\/(.*?)\)/', $markdown, $matches);
         $images = $matches[1];
 
         foreach ($images as $image) {
-            $filePath = __DIR__ . '/' . $image;
-            if (!file_exists($filePath)) {
+            $filePath = __DIR__.'/'.$image;
+            if (! file_exists($filePath)) {
                 Log::error("File $filePath does not exist");
+
                 continue;
             }
 
             $s3Disk = Storage::disk('images');
             $success = $s3Disk->put($image, file_get_contents($filePath));
-            if (!$success) {
+            if (! $success) {
                 Log::error("Failed to upload $filePath to S3");
-                throw new \Exception("Failed to upload $filePath to S3");
+                throw new Exception("Failed to upload $filePath to S3");
             }
             Log::info("Uploaded $filePath to S3");
 
             $tempURL = $s3Disk->temporaryUrl($image, now()->addSeconds(10));
             // TODO: Should make sure this only replaces the expected instance.
-            $markdown = str_replace('./' . $image, $tempURL, $markdown);
+            $markdown = str_replace('./'.$image, $tempURL, $markdown);
         }
 
         // Call node to update
-        $cmd = 'node cmd/notion-export/index.js --page 171944fbb2bc8034838af33758b0aedb --content "' . $markdown . '" --token ' . env('NOTION_AUTH_TOKEN');
+        $cmd = 'node cmd/notion-export/append.js --page 171944fbb2bc8034838af33758b0aedb --content "'.$markdown.'" --token '.env('NOTION_AUTH_TOKEN');
         Process::fromShellCommandline($cmd)->run(function ($type, $data) {
             $this->info($data);
         });

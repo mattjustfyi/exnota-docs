@@ -9,6 +9,7 @@ use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
 
 class CreatePageJob implements ShouldQueue
 {
@@ -39,7 +40,7 @@ class CreatePageJob implements ShouldQueue
         $notionDatabase = $source->notionDatabase;
 
         if ($notionDatabase === null) {
-            $this->fail();
+            $this->release();
 
             return;
         }
@@ -52,5 +53,16 @@ class CreatePageJob implements ShouldQueue
             'databaseId' => $databaseId,
             'content' => $content,
         ]);
+
+        $cmd = 'node cmd/notion-export/create.js --page '.$databaseId.' --content "'.$content.'" --token '.$token;
+        Process::fromShellCommandline($cmd)->run(function ($type, $data) {
+            if ($type === Process::ERR) {
+                Log::error($data);
+                $this->release();
+
+                return;
+            }
+            Log::info($data);
+        });
     }
 }

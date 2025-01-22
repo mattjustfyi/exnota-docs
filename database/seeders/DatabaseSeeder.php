@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         /** @noinspection LaravelFunctionsInspection */
         $repository = Repository::factory()->create([
             'url' => 'https://api.github.com/repos/mttschltz/exnota-docs/contents',
-            'token' => env('GITHUB_TOKEN'),
+            'token' => env('NOTION_AUTH_TOKEN'),
         ]);
 
         $source = $repository->sources()->create([
