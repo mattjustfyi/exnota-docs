@@ -5,7 +5,6 @@ created:
     - database/factories/NotionDatabaseFactory.php
     - database/factories/DocumentFactory.php
     - database/factories/SourceSyncFactory.php
-    - database/migrations/2025_01_24_005646_create_source_syncs_table.php
     - app/Models/Repository.php
     - app/Models/Source.php
     - app/Models/NotionWorkspace.php
@@ -18,6 +17,7 @@ updated:
     - database/migrations/2025_01_21_044713_create_notion_workspaces_table.php
     - database/migrations/2025_01_21_044714_create_notion_databases_table.php
     - database/migrations/2025_01_18_034320_create_documents_table.php
+    - database/migrations/2025_01_24_005646_create_source_syncs_table.php
 models:
     User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string nullable' }
     Repository: { url: text, token: string, relationships: { hasMany: Source } }
@@ -25,4 +25,4 @@ models:
     Document: { path: text, content: text, relationships: { belongsTo: Source } }
     NotionWorkspace: { name: string, token: string, relationships: { hasMany: NotionDatabase } }
     NotionDatabase: { notion_id: string, name: string, relationships: { belongsTo: NotionWorkspace } }
-    SourceSync: { file_paths: jsonb, document_ids: jsonb, relationships: { belongsTo: Source } }
+    SourceSync: { file_paths: 'jsonb nullable', document_ids: 'jsonb nullable', relationships: { belongsTo: Source } }

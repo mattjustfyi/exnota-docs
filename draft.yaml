@@ -31,7 +31,7 @@ models:
       belongsTo: Source
 
   SourceSync:
-    file_paths: jsonb
-    document_ids: jsonb
+    file_paths: jsonb nullable
+    document_ids: jsonb nullable
     relationships:
       belongsTo: Source

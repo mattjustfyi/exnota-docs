@@ -15,8 +15,8 @@ return new class extends Migration
 
         Schema::create('source_syncs', function (Blueprint $table) {
             $table->id();
-            $table->jsonb('file_paths');
-            $table->jsonb('document_ids');
+            $table->jsonb('file_paths')->nullable();
+            $table->jsonb('document_ids')->nullable();
             $table->foreignId('source_id');
             $table->timestamps();
         });
