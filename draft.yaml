@@ -29,3 +29,9 @@ models:
     content: text
     relationships:
       belongsTo: Source
+
+  SourceSync:
+    file_paths: jsonb
+    document_ids: jsonb
+    relationships:
+      belongsTo: Source

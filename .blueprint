@@ -4,11 +4,14 @@ created:
     - database/factories/NotionWorkspaceFactory.php
     - database/factories/NotionDatabaseFactory.php
     - database/factories/DocumentFactory.php
+    - database/factories/SourceSyncFactory.php
+    - database/migrations/2025_01_24_005646_create_source_syncs_table.php
     - app/Models/Repository.php
     - app/Models/Source.php
     - app/Models/NotionWorkspace.php
     - app/Models/NotionDatabase.php
     - app/Models/Document.php
+    - app/Models/SourceSync.php
 updated:
     - database/migrations/2025_01_18_034318_create_repositories_table.php
     - database/migrations/2025_01_18_034319_create_sources_table.php
@@ -22,3 +25,4 @@ models:
     Document: { path: text, content: text, relationships: { belongsTo: Source } }
     NotionWorkspace: { name: string, token: string, relationships: { hasMany: NotionDatabase } }
     NotionDatabase: { notion_id: string, name: string, relationships: { belongsTo: NotionWorkspace } }
+    SourceSync: { file_paths: jsonb, document_ids: jsonb, relationships: { belongsTo: Source } }
