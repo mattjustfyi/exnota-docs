@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\Document;
@@ -24,22 +26,19 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
-        /** @noinspection LaravelFunctionsInspection */
-        $workspace = NotionWorkspace::factory()->create([
+        $workspace = NotionWorkspace::factory()->createOne([
             'name' => 'Test Workspace',
-            'token' => env('NOTION_AUTH_TOKEN'),
+            'token' => config('services.notion.token'),
         ]);
 
-        /** @noinspection LaravelFunctionsInspection */
         $database = $workspace->notionDatabases()->create([
             'name' => 'Test Database',
-            'notion_id' => env('NOTION_TEST_DATABASE_ID'),
+            'notion_id' => config('services.notion.test_database_id'),
         ]);
 
-        /** @noinspection LaravelFunctionsInspection */
         $repository = Repository::factory()->create([
             'url' => 'https://api.github.com/repos/mttschltz/exnota-docs/contents',
-            'token' => env('NOTION_AUTH_TOKEN'),
+            'token' => config('services.github.token'),
         ]);
 
         $source = $repository->sources()->create([

@@ -17,6 +17,9 @@ class Source extends Model
         'repository_id' => 'integer',
     ];
 
+    /**
+     * @return BelongsTo<Repository, $this>
+     */
     public function repository(): BelongsTo
     {
         return $this->belongsTo(Repository::class);
@@ -27,6 +30,9 @@ class Source extends Model
         return $this->belongsTo(NotionDatabase::class);
     }
 
+    /**
+     * @return HasMany<Document, $this>
+     */
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);

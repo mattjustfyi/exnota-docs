@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +16,9 @@ class NotionWorkspace extends Model
         'id' => 'integer',
     ];
 
+    /**
+     * @return HasMany<NotionDatabase, $this>
+     */
     public function notionDatabases(): HasMany
     {
         return $this->hasMany(NotionDatabase::class);

@@ -5,12 +5,13 @@ namespace Database\Factories;
 use App\Models\Repository;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Repository> */
 class RepositoryFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
-     * @var string
+     * @var class-string<Repository>
      */
     protected $model = Repository::class;
 

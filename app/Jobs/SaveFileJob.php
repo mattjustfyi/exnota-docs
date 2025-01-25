@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Document;
-use App\Models\Source;
+use App\Models\SourceSync;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -17,16 +18,13 @@ class SaveFileJob implements ShouldQueue
 {
     use Batchable, Queueable;
 
-    private Source $source;
+    private SourceSync $sourceSync;
 
     private string $filePath;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(Source $source, string $filePath)
+    public function __construct(SourceSync $sourceSync, string $filePath)
     {
-        $this->source = $source;
+        $this->sourceSync = $sourceSync;
         $this->filePath = $filePath;
     }
 
@@ -41,10 +39,10 @@ class SaveFileJob implements ShouldQueue
             return;
         }
 
-        $githubToken = $this->source->repository->token; // Replace this with your actual GitHub token
-
-        $path = $this->source->repository->url.'/'.$this->filePath;
-
+        // Get file download link
+        $source = $this->sourceSync->source;
+        $githubToken = $source->repository->token; // Replace this with your actual GitHub token
+        $path = $source->repository->url.'/'.$this->filePath;
         $response = Http::withHeaders([
             'Accept' => 'application/vnd.github+json',
             'Authorization' => 'Bearer '.$githubToken,
@@ -54,20 +52,34 @@ class SaveFileJob implements ShouldQueue
         if (! $response->successful()) {
             Log::error('Failed to get file: '.$path);
             $this->release();
+
+            return;
         }
 
         $json = $response->json();
         $downloadUrl = $json['download_url'];
         Log::info('file contents:'.$downloadUrl);
 
+        // Download file
         $content = file_get_contents($downloadUrl);
         Log::info('file contents:'.$content);
 
-        $document = Document::create([
-            'path' => $this->filePath,
-            'content' => $content,
-            'source_id' => $this->source->id,
-        ]);
+        // Save to document and update source sync
+        $document = DB::transaction(function () use ($source, $content) {
+            $doc = Document::create([
+                'path' => $this->filePath,
+                'content' => $content,
+                'source_id' => $source->id,
+            ]);
+
+            $documentIds = $this->sourceSync->document_ids;
+            $documentIds[] = $doc->id;
+            $this->sourceSync->update([
+                'document_ids' => $documentIds,
+            ]);
+
+            return $doc;
+        });
 
         Log::info('Document created', ['document' => $document]);
     }

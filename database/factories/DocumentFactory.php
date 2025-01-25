@@ -8,12 +8,13 @@ use App\Models\Document;
 use App\Models\Source;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<Document> */
 class DocumentFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
-     * @var string
+     * @var class-string<Document>
      */
     protected $model = Document::class;
 

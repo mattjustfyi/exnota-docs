@@ -5,12 +5,13 @@ namespace Database\Factories;
 use App\Models\NotionWorkspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<NotionWorkspace> */
 class NotionWorkspaceFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
-     * @var string
+     * @var class-string<NotionWorkspace>
      */
     protected $model = NotionWorkspace::class;
 

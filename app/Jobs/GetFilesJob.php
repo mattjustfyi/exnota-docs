@@ -5,55 +5,80 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Source;
+use App\Models\SourceSync;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class GetFilesJob implements ShouldQueue
 {
     use Queueable;
 
-    private Source $source;
+    public int $timeout = 600;
 
-    private int $timeout = 600;
+    private SourceSync $sourceSync;
 
     /**
      * Create a new job instance.
      */
     public function __construct(Source $source)
     {
-        $this->source = $source;
+        $this->sourceSync = SourceSync::create([
+            'source_id' => $source->id,
+        ]);
     }
 
     /**
      * Execute the job.
-     *
-     * @throws ConnectionException
-     * @throws Throwable
      */
     public function handle(): void
     {
-        $filePaths = $this->getFilesInDir($this->source->repository->url, $this->source->path, 2);
+        // Fetch and save file paths
+        $source = $this->sourceSync->source;
+        try {
+            $filePaths = $this->getFilesInDir($source->repository->url, $source->path, 2);
+        } catch (GitHubException|ConnectionException) {
+            $this->release();
+
+            return;
+        }
         Log::info('filePaths', $filePaths);
 
-        $jobs = array_map(function ($filePath) {
-            return new SaveFileJob($this->source, $filePath);
+        $this->sourceSync->update([
+            'file_paths' => $filePaths,
+        ]);
+
+        // Create save file job for each path
+        $saveFileJobs = array_map(function ($filePath) {
+            return new SaveFileJob($this->sourceSync, $filePath);
         }, $filePaths);
-        $batch = Bus::batch($jobs)->before(function () {
-            Log::info('Batch started');
+
+        $sourceSync = $this->sourceSync;
+        $pendingSaveFileBatch = Bus::batch($saveFileJobs)->before(function () {
+            Log::info('SaveFileJob batch started');
         })->progress(function () {
-            Log::info('Batch progress');
-        })->then(function () {
-            Log::info('Batch finished (then)');
+            Log::info('SaveFileJob batch progress');
+        })->then(function () use ($sourceSync) {
+            Log::info('SaveFileJob batch finished (then)');
+
+            // TODO: Create a batch of CreatePageJobs, one for each $this->sourceSync->document_ids value
+            // and pass to the job the document and source sync
+            $documentIds = $sourceSync->document_ids;
+            Log::info('documentIds', [
+                'documentIds' => $documentIds,
+            ]);
+
         })->catch(function () {
-            Log::error('Batch failed');
+            Log::error('SaveFileJob batch failed');
         })->finally(function () {
-            Log::info('Batch finished (finally)');
-        })->dispatch();
+            Log::info('SaveFileJob batch finished (finally)');
+        });
+
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $batch = $pendingSaveFileBatch->dispatch();
 
         Log::info('Dispatched batch ID: '.$batch->id);
     }
@@ -62,10 +87,12 @@ class GetFilesJob implements ShouldQueue
      * @param  string[]  $filePaths
      *
      * @throws ConnectionException
+     * @throws GitHubException
      */
     private function getFilesInDir(string $base, string $dirPath, int $depth, array $filePaths = []): array
     {
-        $githubToken = $this->source->repository->token; // Replace this with your actual GitHub token
+        $source = $this->sourceSync->source;
+        $githubToken = $source->repository->token; // Replace this with your actual GitHub token
 
         $response = Http::withHeaders([
             'Accept' => 'application/vnd.github+json',
@@ -75,7 +102,7 @@ class GetFilesJob implements ShouldQueue
 
         if (! $response->successful()) {
             Log::error('Failed to get files in dir: '.$dirPath);
-            $this->release();
+            throw new GitHubException($response->reason());
         }
 
         $data = $response->json();
@@ -88,7 +115,7 @@ class GetFilesJob implements ShouldQueue
                 $filePaths[] = $item['path'];
             } else {
                 Log::error('Unknown item type: '.$item['type']);
-                $this->release();
+                throw new GitHubException('Unknown item type: '.$item['type']);
             }
         }
 

@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'github' => [
+        'token' => env('GITHUB_TOKEN'),
+    ],
+
+    'notion' => [
+        'token' => env('NOTION_AUTH_TOKEN'),
+        'test_database_id' => env('NOTION_TEST_DATABASE_ID'),
+    ],
+
 ];

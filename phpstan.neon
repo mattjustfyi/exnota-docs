@@ -6,11 +6,23 @@ parameters:
 
     paths:
         - app/
+        - bootstrap/
+        - config/
+        - database/
+        - resources/
+        - routes/
+        - storage/
+        - tests/
+        - tools/
 
     # Level 10 is the highest level
     level: 5
 
-#    ignoreErrors:
+    ignoreErrors:
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: config
+
 #        - '#PHPDoc tag @var#'
 #
 #    excludePaths:
