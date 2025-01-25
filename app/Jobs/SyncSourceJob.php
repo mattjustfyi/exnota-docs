@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class GetFilesJob implements ShouldQueue
+class SyncSourceJob implements ShouldQueue
 {
     use Queueable;
 
