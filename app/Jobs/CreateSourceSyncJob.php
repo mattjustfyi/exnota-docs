@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Models\Document;
 use App\Models\Source;
 use App\Models\SourceSync;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,8 +13,9 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
-class SyncSourceJob implements ShouldQueue
+class CreateSourceSyncJob implements ShouldQueue
 {
     use Queueable;
 
@@ -63,14 +65,9 @@ class SyncSourceJob implements ShouldQueue
             Log::info('SaveFileJob batch progress');
         })->then(function () use ($sourceSync) {
             Log::info('SaveFileJob batch finished (then)');
-
-            // TODO: Create a batch of CreatePageJobs, one for each $this->sourceSync->document_ids value
-            // and pass to the job the document and source sync
-            $documentIds = $sourceSync->document_ids;
-            Log::info('documentIds', [
-                'documentIds' => $documentIds,
-            ]);
-
+            // Can't reference $this as this code is serialized into a job in the database
+            // so call a static function.
+            CreateSourceSyncJob::createCreatePageJobs($sourceSync->id);
         })->catch(function () {
             Log::error('SaveFileJob batch failed');
         })->finally(function () {
@@ -128,5 +125,46 @@ class SyncSourceJob implements ShouldQueue
         }
 
         return $filePaths;
+    }
+
+    /**
+     * @throws NoDocumentsException
+     * @throws Throwable
+     */
+    private static function createCreatePageJobs(int $sourceSyncId): void
+    {
+        $sourceSync = SourceSync::findOrFail($sourceSyncId);
+        $documentIds = $sourceSync->document_ids;
+
+        if (! is_array($documentIds) || count($documentIds) === 0) {
+            Log::error('No document ids');
+            throw new NoDocumentsException($sourceSync->id);
+        }
+
+        $createPageJobs = array_map(function ($document_id) use ($sourceSync) {
+            $document = Document::findOrFail($document_id);
+
+            // TODO: Passing document_id instead of document does not result in
+            // an error because document_id is a mixed type. So try updating phpstan
+            // to level 10 (to get max 'mixed' strictness), make sure this fixes the issue
+            // and try solving other issues. If other checks are too strict, maybe
+            // add ignore rules so we can keep mixed strictness while loosening
+            // other rules
+            return new CreatePageJob($sourceSync, $document);
+        }, $documentIds);
+
+        $pendingBatch = Bus::batch($createPageJobs)->before(function () {
+            Log::info('CreatePageJob batch started');
+        })->progress(function () {
+            Log::info('CreatePageJob batch progress');
+        })->then(function () {
+            Log::info('CreatePageJob batch finished (then)');
+        })->catch(function () {
+            Log::error('CreatePageJob batch failed');
+        })->finally(function () {
+            Log::info('CreatePageJob batch finished (finally)');
+        });
+
+        $pendingBatch->dispatch();
     }
 }
