@@ -10,6 +10,8 @@ use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
+use Symfony\Component\Process\Process;
 
 class CreatePageJob implements ShouldQueue
 {
@@ -36,39 +38,60 @@ class CreatePageJob implements ShouldQueue
 
         Log::info('CreatePageJob handled for document: '.$this->document->id);
 
-        // TODO: Re-enable
+        $source = $this->document->source;
+        $notionDatabase = $source?->notionDatabase;
 
-        //        $source = $this->document->source;
-        //        $repository = $source->repository;
-        //
-        //        $token = $repository->token;
-        //        $notionDatabase = $source->notionDatabase;
-        //
-        //        if ($notionDatabase === null) {
-        //            $this->release();
-        //
-        //            return;
-        //        }
-        //
-        //        $databaseId = $notionDatabase->notion_id;
-        //        $content = $this->document->content;
-        //
-        //        Log::info('CreatePageJob values', [
-        //            'token' => $token,
-        //            'databaseId' => $databaseId,
-        //            'content' => $content,
-        //        ]);
-        //
-        //        $contentEncoded = str_replace('"', '\"', $content);
-        //        $cmd = 'node cmd/notion-export/create.js --page '.$databaseId.' --content "'.$contentEncoded.'" --token '.$token;
-        //        Process::fromShellCommandline($cmd)->run(function ($type, $data) {
-        //            if ($type === Process::ERR) {
-        //                Log::error($data);
-        //                $this->release();
-        //
-        //                return;
-        //            }
-        //            Log::info($data);
-        //        });
+        $token = $notionDatabase?->notionWorkspace?->token;
+        $databaseId = $notionDatabase?->notion_id;
+
+        if ($token === null) {
+            Log::error('No token found for source '.$source?->id);
+            $this->release();
+
+            return;
+        }
+        if ($databaseId === null) {
+            Log::error('No database id found for source '.$source?->id);
+            $this->release();
+
+            return;
+        }
+
+        $content = $this->document->content;
+
+        Log::info('CreatePageJob values', [
+            'token' => $token,
+            'databaseId' => $databaseId,
+            'content' => $content,
+        ]);
+
+        $cmd = 'node cmd/notion-export/create.js';
+        $payload = json_encode([
+            'token' => $token,
+            'page' => $databaseId,
+            'content' => $content,
+        ]);
+        if ($payload === false) {
+            Log::error('Failed to encode payload');
+            $this->release();
+            throw new RuntimeException('Failed to encode payload');
+        }
+
+        $process = Process::fromShellCommandline($cmd);
+        $process->setInput($payload);
+        $process->run(function ($type, $data) {
+            if ($type === Process::ERR) {
+                Log::error('Error running create.js', [
+                    'data' => $data,
+                    'sourceSyncId' => $this->syncSource->id,
+                    'documentId' => $this->document->id,
+                ]);
+                $this->release();
+                throw new RuntimeException('Error running create.js');
+            }
+            Log::info('Received log from create.js', ['data' => $data]);
+        });
+
+        Log::info('CreatePageJob handled for document: '.$this->document->id);
     }
 }
