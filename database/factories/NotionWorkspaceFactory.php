@@ -21,8 +21,8 @@ class NotionWorkspaceFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->name(),
-            'token' => $this->faker->word(),
+            'name' => fake()->name(),
+            'token' => fake()->word(),
         ];
     }
 }

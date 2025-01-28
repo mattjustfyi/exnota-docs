@@ -6,12 +6,13 @@ use App\Models\Source;
 use App\Models\SourceSync;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/** @extends Factory<SourceSync> */
 class SourceSyncFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
-     * @var string
+     * @var class-string<SourceSync>
      */
     protected $model = SourceSync::class;
 
@@ -22,7 +23,7 @@ class SourceSyncFactory extends Factory
     {
         return [
             'file_paths' => '[]',
-            'document_ids' => '[]',
+            'document_ids' => [],
             'source_id' => Source::factory(),
         ];
     }

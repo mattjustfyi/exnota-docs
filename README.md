@@ -34,3 +34,8 @@ class NotionWorkspaceFactory extends Factory
 public function notionDatabases(): HasMany
 {
 ```
+More: https://github.com/larastan/larastan/blob/3.x/docs/features.md#model-relationships
+
+### Queries
+
+* `findOrFail` and similar may error if given ID is `mixed` 

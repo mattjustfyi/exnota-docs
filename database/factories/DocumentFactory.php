@@ -121,7 +121,7 @@ _See also:_
 EOD;
 
         return [
-            'path' => $this->faker->filePath(),
+            'path' => fake()->filePath(),
             'content' => $content,
             'source_id' => Source::factory(),
         ];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Document;
+use App\Models\Repository;
 use App\Models\Source;
 use App\Models\SourceSync;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -39,15 +40,18 @@ class CreateSourceSyncJob implements ShouldQueue
     public function handle(): void
     {
         // Fetch and save file paths
+        /** @var Source $source */
         $source = $this->sourceSync->source;
+        /** @var Repository $repository */
+        $repository = $source->repository;
         try {
-            $filePaths = $this->getFilesInDir($source->repository->url, $source->path, 2);
+            $filePaths = $this->getFilesInDir($repository->url, $source->path, 2);
         } catch (GitHubException|ConnectionException) {
             $this->release();
 
             return;
         }
-        Log::info('filePaths', $filePaths);
+        Log::info('filePaths', ['filePaths' => $filePaths]);
 
         $this->sourceSync->update([
             'file_paths' => $filePaths,
@@ -82,6 +86,7 @@ class CreateSourceSyncJob implements ShouldQueue
 
     /**
      * @param  string[]  $filePaths
+     * @return string[]
      *
      * @throws ConnectionException
      * @throws GitHubException
@@ -89,7 +94,10 @@ class CreateSourceSyncJob implements ShouldQueue
     private function getFilesInDir(string $base, string $dirPath, int $depth, array $filePaths = []): array
     {
         $source = $this->sourceSync->source;
-        $githubToken = $source->repository->token; // Replace this with your actual GitHub token
+        $githubToken = $source?->repository?->token; // Replace this with your actual GitHub token
+        if (! is_string($githubToken)) {
+            throw new GitHubException('GitHub token not set');
+        }
 
         $response = Http::withHeaders([
             'Accept' => 'application/vnd.github+json',
@@ -102,6 +110,7 @@ class CreateSourceSyncJob implements ShouldQueue
             throw new GitHubException($response->reason());
         }
 
+        /** @var array<string, array{type:string, path:string}> $data */
         $data = $response->json();
 
         $subDirPaths = [];
@@ -133,23 +142,20 @@ class CreateSourceSyncJob implements ShouldQueue
      */
     private static function createCreatePageJobs(int $sourceSyncId): void
     {
+        /** @var SourceSync $sourceSync */
         $sourceSync = SourceSync::findOrFail($sourceSyncId);
+        /** @var int[] $documentIds */
         $documentIds = $sourceSync->document_ids;
 
-        if (! is_array($documentIds) || count($documentIds) === 0) {
+        if (count($documentIds) === 0) {
             Log::error('No document ids');
             throw new NoDocumentsException($sourceSync->id);
         }
 
         $createPageJobs = array_map(function ($document_id) use ($sourceSync) {
+            /** @var Document $document */
             $document = Document::findOrFail($document_id);
 
-            // TODO: Passing document_id instead of document does not result in
-            // an error because document_id is a mixed type. So try updating phpstan
-            // to level 10 (to get max 'mixed' strictness), make sure this fixes the issue
-            // and try solving other issues. If other checks are too strict, maybe
-            // add ignore rules so we can keep mixed strictness while loosening
-            // other rules
             return new CreatePageJob($sourceSync, $document);
         }, $documentIds);
 

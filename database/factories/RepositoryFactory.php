@@ -21,8 +21,8 @@ class RepositoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'url' => $this->faker->url(),
-            'token' => $this->faker->word(),
+            'url' => fake()->url(),
+            'token' => fake()->word(),
         ];
     }
 }

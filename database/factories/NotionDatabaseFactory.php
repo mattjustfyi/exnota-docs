@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\NotionDatabase;
@@ -21,8 +23,8 @@ class NotionDatabaseFactory extends Factory
     public function definition(): array
     {
         return [
-            'notion_id' => $this->faker->uuid(),
-            'name' => $this->faker->name(),
+            'notion_id' => fake()->uuid(),
+            'name' => fake()->name(),
             'notion_workspace_id' => NotionWorkspace::factory(),
         ];
     }

@@ -22,7 +22,7 @@ class SourceFactory extends Factory
     public function definition(): array
     {
         return [
-            'path' => $this->faker->filePath(),
+            'path' => fake()->filePath(),
             'notion_database_id' => NotionDatabase::factory(),
             'repository_id' => Repository::factory(),
         ];
