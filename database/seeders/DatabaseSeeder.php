@@ -45,7 +45,8 @@ class DatabaseSeeder extends Seeder
             'path' => '/tests/Data/Docs/OneLevel',
             'notion_database_id' => $database->id,
         ]);
-
-        $source->documents()->save(Document::factory()->make());
+        Document::factory()->create([
+            'source_id' => $source->id,
+        ]);
     }
 }
