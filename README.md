@@ -40,7 +40,14 @@ vendor/bin/phpstan analyze --memory-limit 1024M
 
 ## Testing
 
-### Notion export: Directly to `create.js`
+### Full sync
+
+```php
+$source = App\Models\Source::find(1) 
+App\Jobs\CreateSourceSyncJob::dispatch($source);1;
+```
+
+### Export single document
 
 * From database: Construct JSON from database and send to create.js
     ```bash
