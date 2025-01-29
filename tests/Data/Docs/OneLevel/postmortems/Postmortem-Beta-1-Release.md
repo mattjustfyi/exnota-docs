@@ -92,7 +92,7 @@ Description: Flutter launched beta 1 on February 27, 2018.  This document attemp
 
 | Action Item | Owner | Issue | Notes |
 |-------------|-------|-------|-------|
-| Ensure that Travis tests the ability to build the gallery. | [@xster](https://github.com/xster) || [Done](https://github.com/flutter/flutter/pull/14714) |
+| Ensure that Travis tests the ability to build the gallery. | [@xster](https://github.com/xster) | | [Done](https://github.com/flutter/flutter/pull/14714) |
 | Build all examples on Travis and AppVeyor on the dev branch. | [@xster](https://github.com/xster) | [#15164](https://github.com/flutter/flutter/issues/15164) ||
 | Add a hidden `--version` argument to `flutter upgrade` to allow the person doing a beta roll to better simulate the upgrade path. | [@tvolkert](https://github.com/tvolkert) | [#14970](https://github.com/flutter/flutter/issues/14970) ||
 | Fetch upstream refs before switching channels in the “channel” command. | [@tvolkert](https://github.com/tvolkert) | [#14893](https://github.com/flutter/flutter/issues/14893) | [Done](https://github.com/flutter/flutter/pull/14896) |
@@ -105,15 +105,15 @@ Description: Flutter launched beta 1 on February 27, 2018.  This document attemp
 
 ### Process
 
-| Action Item | Owner | Issue | Notes |
-|-------------|-------|-------|-------|
+| Action Item | Owner | Issue                                | Notes |
+|-------------|-------|--------------------------------------|-------|
 | Add a wiki page on identifying bad builds | [@tvolkert](https://github.com/tvolkert) | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | [Done](../releases/Bad-Builds.md) |
-| Send an email to the core Flutter team about the need to think about marking builds as bad. | [@tvolkert](https://github.com/tvolkert) || Done |
-| Update our release process to call out the need to ensure that the gallery can be built and run. | [@tvolkert](https://github.com/tvolkert) || [Done](../releases/Release-process.md#rolling-the-beta-channel) |
-| Update release process to require that the Travis build go green on the beta branch before sending out any announcements or issuing any public communications. | [@tvolkert](https://github.com/tvolkert) || [Done](../releases/Release-process.md#rolling-the-beta-channel) |
-| Make a beta pusher group in GitHub, to control who has access to push beta releases. | [@Hixie](https://github.com/Hixie) || [Done](../releases/Release-process.md#rolling-the-beta-channel) |
-| Update beta release process to require that the candidate dev build “can be successfully upgraded to from the dev build to which the beta branch currently points.” | [@tvolkert](https://github.com/tvolkert) || [Done](../releases/Release-process.md#rolling-the-beta-channel) |
-| Update the release process to include downloading and installing the packaged archive for the dev build that represents the prior beta — and ensuring that it’s able to upgrade to the newest release. | [@gspen...](https://github.com/gspencergoog) |||
+| Send an email to the core Flutter team about the need to think about marking builds as bad. | [@tvolkert](https://github.com/tvolkert) | | Done |
+| Update our release process to call out the need to ensure that the gallery can be built and run. | [@tvolkert](https://github.com/tvolkert) | | [Done](../releases/Release-process.md#rolling-the-beta-channel) |
+| Update release process to require that the Travis build go green on the beta branch before sending out any announcements or issuing any public communications. | [@tvolkert](https://github.com/tvolkert) | | [Done](../releases/Release-process.md#rolling-the-beta-channel) |
+| Make a beta pusher group in GitHub, to control who has access to push beta releases. | [@Hixie](https://github.com/Hixie) | | [Done](../releases/Release-process.md#rolling-the-beta-channel) |
+| Update beta release process to require that the candidate dev build “can be successfully upgraded to from the dev build to which the beta branch currently points.” | [@tvolkert](https://github.com/tvolkert) | | [Done](../releases/Release-process.md#rolling-the-beta-channel) |
+| Update the release process to include downloading and installing the packaged archive for the dev build that represents the prior beta — and ensuring that it’s able to upgrade to the newest release. | [@gspen...](https://github.com/gspencergoog) | ||
 
 ### Fixes
 

@@ -1,3 +1,18 @@
+<!-- TOC -->
+* [Exnota Docs](#exnota-docs)
+  * [Useful commands](#useful-commands)
+  * [Bugs](#bugs)
+  * [Testing](#testing)
+    * [Notion export: Directly to `create.js`](#notion-export-directly-to-createjs)
+    * [Notion export: Single job](#notion-export-single-job-)
+  * [PhpStorm](#phpstorm)
+    * [When listening for debug connections](#when-listening-for-debug-connections-)
+  * [PHPStan/Larastan](#phpstanlarastan)
+    * [Factories](#factories)
+    * [Eloquent/model relationships](#eloquentmodel-relationships)
+    * [Queries](#queries)
+<!-- TOC -->
+
 # Exnota Docs
 
 ## Useful commands
@@ -6,6 +21,23 @@ Run phpstan on project.
 ```bash
 vendor/bin/phpstan analyze --memory-limit 1024M
 ```
+## Bugs
+
+- Empty table cells need at least a space, if they are not the last row cell. 
+  - E.g.
+      ```markdown
+      ### Error
+      | Action Item | Owner | Issue | Notes |
+      |-------------|-------|-------|-------|
+      |action item||issue|notes|
+    
+      ### No error
+      | Action Item | Owner | Issue | Notes |
+      |-------------|-------|-------|-------|
+      |action item| |issue||
+      ```
+  - Real example: `tests/Data/Docs/OneLevel/postmortems/Postmortem-Beta-1-Release.md`
+
 ## Testing
 
 ### Notion export: Directly to `create.js`
@@ -17,6 +49,7 @@ vendor/bin/phpstan analyze --memory-limit 1024M
 
 * From file
     ```bash
+    cd cmd/notion-export
     node create.js <<< '{"token": "<token>", "database_id": "<notion database id>", "content_path": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md"}'
     ```
 ### Notion export: Single job 
