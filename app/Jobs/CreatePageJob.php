@@ -68,7 +68,7 @@ class CreatePageJob implements ShouldQueue
         $cmd = 'node cmd/notion-export/create.js';
         $payload = json_encode([
             'token' => $token,
-            'page' => $databaseId,
+            'database_id' => $databaseId,
             'content' => $content,
         ]);
         if ($payload === false) {

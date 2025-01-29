@@ -6,6 +6,32 @@ Run phpstan on project.
 ```bash
 vendor/bin/phpstan analyze --memory-limit 1024M
 ```
+## Testing
+
+### Notion export: Directly to `create.js`
+
+* From database: Construct JSON from database and send to create.js
+    ```bash
+    sqlite3 ../../database/database.sqlite "`cat ../../tools/export_data.sql`" | node create.js
+    ```
+
+* From file
+    ```bash
+    node create.js <<< '{"token": "<token>", "database_id": "<notion database id>", "content_path": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md"}'
+    ```
+### Notion export: Single job 
+
+```php
+$source = Source::find(1);
+// Currently SourceSync isn't used much by CreatePageJob
+$sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
+
+$doc = Document::factory() \
+    ->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/In-case-of-emergency.md')
+    ->create(['source_id' => $source->id]);
+
+ App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
+```
 
 ## PhpStorm
 

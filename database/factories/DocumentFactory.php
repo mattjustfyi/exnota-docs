@@ -126,4 +126,18 @@ EOD;
             'source_id' => Source::factory(),
         ];
     }
+
+    /**
+     * @return Factory<Document>
+     */
+    public function contentFromFile(string $path): Factory
+    {
+        $content = file_get_contents($path);
+
+        return $this->state(function (array $attributes) use ($content) {
+            return [
+                'content' => $content,
+            ];
+        });
+    }
 }

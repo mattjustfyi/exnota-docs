@@ -1,5 +1,6 @@
-const {markdownToBlocks} = require("@tryfabric/martian");
-const {Client} = require("@notionhq/client");
+const { markdownToBlocks } = require("@tryfabric/martian");
+const { Client } = require("@notionhq/client");
+const fs = require("fs");
 
 try {
     (async () => {
@@ -13,16 +14,34 @@ try {
 
         console.log("Listening for 'end'");
         process.stdin.on("end", async () => {
+            console.log('Received input', input);
             let blocks;
             try {
                 console.log('Received end');
-                const {content, page, token} = JSON.parse(input);
-                console.log('content', content);
-                console.log('page', page);
-                console.log('token', token);
+                const { content, content_path: contentPath, database_id: databaseId, token } = JSON.parse(input);
+                let finalContent = content;
 
-                console.log('Converting to blocks')
-                blocks = markdownToBlocks(content);
+                if (!finalContent && contentPath) {
+                    try {
+                        if (fs.existsSync(contentPath)) {
+                            finalContent = fs.readFileSync(contentPath, 'utf-8');
+                            console.log(`Read content from file: ${contentPath}`);
+                        } else {
+                            console.error(`Content file not found at path: ${contentPath}`);
+                        }
+                    } catch (err) {
+                        console.error(`Error reading file at path ${contentPath}:`, err);
+                        throw err;
+                    }
+                }
+
+                if (!finalContent) {
+                    console.error("No content provided and content_path is invalid or unreadable.");
+                    throw new Error("Content is required.");
+                }
+
+                console.log('Converting to blocks');
+                blocks = markdownToBlocks(finalContent);
 
                 // Extract h1
                 const heading1Index = blocks.findIndex(
@@ -42,7 +61,7 @@ try {
                 const pagePropResp = await notion.pages.create({
                     parent: {
                         type: 'database_id',
-                        database_id: page,
+                        database_id: databaseId,
                     },
                     properties: {
                         "title": {
@@ -65,8 +84,7 @@ try {
                 //     block_id: page,
                 //     children: blocks,
                 // });
-            }
-            catch (e) {
+            } catch (e) {
                 console.info(e);
                 console.info('Blocks', blocks);
                 throw e;
