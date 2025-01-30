@@ -24,6 +24,7 @@ class NotionDatabaseFactory extends Factory
     {
         return [
             'notion_id' => fake()->uuid(),
+            'notion_home_id' => fake()->uuid(),
             'name' => fake()->name(),
             'notion_workspace_id' => NotionWorkspace::factory(),
         ];

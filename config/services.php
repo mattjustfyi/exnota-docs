@@ -42,6 +42,7 @@ return [
     'notion' => [
         'token' => env('NOTION_AUTH_TOKEN'),
         'test_database_id' => env('NOTION_TEST_DATABASE_ID'),
+        'test_home_id' => env('NOTION_TEST_HOME_ID'),
     ],
 
 ];

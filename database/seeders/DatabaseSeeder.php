@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
         $database = $workspace->notionDatabases()->create([
             'name' => 'Test Database',
             'notion_id' => config('services.notion.test_database_id'),
+            'notion_home_id' => config('services.notion.test_home_id'),
         ]);
 
         $repository = Repository::factory()->create([
