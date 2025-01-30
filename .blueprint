@@ -24,5 +24,5 @@ models:
     Source: { path: text, notion_database_id: 'nullable foreign', relationships: { belongsTo: Repository, hasMany: Document } }
     Document: { path: text, content: text, relationships: { belongsTo: Source } }
     NotionWorkspace: { name: string, token: string, relationships: { hasMany: NotionDatabase } }
-    NotionDatabase: { notion_id: string, home_notion_id: string, name: string, relationships: { belongsTo: NotionWorkspace } }
+    NotionDatabase: { notion_id: string, notion_home_id: string, name: string, relationships: { belongsTo: NotionWorkspace } }
     SourceSync: { file_paths: 'jsonb nullable', document_ids: 'jsonb nullable', relationships: { belongsTo: Source } }

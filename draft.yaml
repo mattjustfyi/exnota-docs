@@ -20,7 +20,7 @@ models:
 
   NotionDatabase:
     notion_id: string
-    home_notion_id: string
+    notion_home_id: string
     name: string
     relationships:
       belongsTo: NotionWorkspace
