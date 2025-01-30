@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('notion_databases', function (Blueprint $table) {
             $table->id();
             $table->string('notion_id');
+            $table->string('home_notion_id');
             $table->string('name');
             $table->foreignId('notion_workspace_id');
             $table->timestamps();

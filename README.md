@@ -22,6 +22,12 @@ Run phpstan on project.
 ```bash
 vendor/bin/phpstan analyze --memory-limit 1024M
 ```
+
+Re-generate models. Will need to revert changes to factories.
+```bash
+pa blueprint:build -m
+```
+
 ## Bugs
 
 - Empty table cells need at least a space, if they are not the last row cell. 
