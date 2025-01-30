@@ -3,7 +3,8 @@
   * [Useful commands](#useful-commands)
   * [Bugs](#bugs)
   * [Testing](#testing)
-    * [Notion export: Directly to `create.js`](#notion-export-directly-to-createjs)
+    * [Full sync](#full-sync)
+    * [Export single document](#export-single-document)
     * [Notion export: Single job](#notion-export-single-job-)
   * [PhpStorm](#phpstorm)
     * [When listening for debug connections](#when-listening-for-debug-connections-)
@@ -57,7 +58,7 @@ App\Jobs\CreateSourceSyncJob::dispatch($source);1;
 * From file
     ```bash
     cd cmd/notion-export
-    node create.js <<< '{"token": "<token>", "database_id": "<notion database id>", "content_path": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md"}'
+    node create.js <<< '{"token": "<token>", "databaseId": "<notion database id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
     ```
 ### Notion export: Single job 
 

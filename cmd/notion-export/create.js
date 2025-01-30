@@ -1,5 +1,5 @@
-const { markdownToBlocks } = require("@tryfabric/martian");
-const { Client } = require("@notionhq/client");
+const {markdownToBlocks} = require("@tryfabric/martian");
+const {Client} = require("@notionhq/client");
 const fs = require("fs");
 
 try {
@@ -18,7 +18,15 @@ try {
             let blocks;
             try {
                 console.log('Received end');
-                const { content, content_path: contentPath, database_id: databaseId, token } = JSON.parse(input);
+                const {
+                    content,
+                    // Path in the repo
+                    filePath,
+                    // (optional) local file path to get content from
+                    contentPath,
+                    databaseId,
+                    token
+                } = JSON.parse(input);
                 let finalContent = content;
 
                 if (!finalContent && contentPath) {
@@ -36,7 +44,7 @@ try {
                 }
 
                 if (!finalContent) {
-                    console.error("No content provided and content_path is invalid or unreadable.");
+                    console.error("No content provided and contentPath is invalid or unreadable.");
                     throw new Error("Content is required.");
                 }
 
@@ -44,12 +52,25 @@ try {
                 blocks = markdownToBlocks(finalContent);
 
                 // Extract h1
-                const heading1Index = blocks.findIndex(
-                    (block) => block.type === "heading_1"
-                );
-                let heading1Block;
-                if (heading1Index !== -1) {
-                    heading1Block = blocks.splice(heading1Index, 1)[0];
+                const h1Indexes = blocks
+                    .map((block, index) => block.type === "heading_1" ? index : -1)
+                    .filter(index => index !== -1);
+                console.log('h1Indexes', h1Indexes);
+                let titleRichText;
+                if (h1Indexes.length === 1 && h1Indexes[0] <= 1) {
+                    console.log('Found h1');
+                    titleRichText = blocks.splice(h1Indexes[0], 1)[0].heading_1.rich_text;
+                } else {
+                    console.log('No h1 found, using file path to extract title:' + filePath);
+                    const titleText = filePath.split('/').pop().replace(/\.[^/.]+$/, "");
+                    titleRichText = [
+                        {
+                            "type": "text",
+                            "text": {
+                                "content": titleText,
+                            }
+                        }
+                    ];
                 }
 
                 // Initializing a client
@@ -66,14 +87,7 @@ try {
                     properties: {
                         "title": {
                             type: "title",
-                            title: heading1Block?.heading_1.rich_text ?? [
-                                {
-                                    "type": "text",
-                                    "text": {
-                                        "content": "untitled",
-                                    }
-                                }
-                            ],
+                            title: titleRichText,
                         },
                     },
                     children: blocks,

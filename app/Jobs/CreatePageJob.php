@@ -57,19 +57,22 @@ class CreatePageJob implements ShouldQueue
             return;
         }
 
+        $filePath = $this->document->path;
         $content = $this->document->content;
 
         Log::info('CreatePageJob values', [
             'token' => $token,
             'databaseId' => $databaseId,
             'content' => $content,
+            'filePath' => $filePath,
         ]);
 
         $cmd = 'node cmd/notion-export/create.js';
         $payload = json_encode([
             'token' => $token,
-            'database_id' => $databaseId,
+            'databaseId' => $databaseId,
             'content' => $content,
+            'filePath' => $filePath,
         ]);
         if ($payload === false) {
             Log::error('Failed to encode payload');
