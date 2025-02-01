@@ -6,6 +6,7 @@
     * [Full sync](#full-sync)
     * [Export single document](#export-single-document)
     * [Notion export: Single job](#notion-export-single-job-)
+    * [Home update](#home-update)
   * [PhpStorm](#phpstorm)
     * [When listening for debug connections](#when-listening-for-debug-connections-)
   * [PHPStan/Larastan](#phpstanlarastan)
@@ -20,7 +21,14 @@
 
 Run phpstan on project.
 ```bash
+# Default PHP
 vendor/bin/phpstan analyze --memory-limit 1024M
+
+# Herd PHP
+herd php vendor/bin/phpstan analyze --memory-limit 1024M
+
+# Specific file
+herd php vendor/bin/phpstan analyze --memory-limit 1024M app/Jobs/CreatePageJob.php
 ```
 
 Re-generate models. Will need to revert changes to factories.
@@ -78,6 +86,15 @@ $doc = Document::factory() \
     ->create(['source_id' => $source->id]);
 
  App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
+```
+
+### Home update
+```php
+$source = Source::find(1);
+// Currently SourceSync isn't used much by CreatePageJob
+$sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
+
+App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $sourceSync->source->notionDatabase);1; 
 ```
 
 ## PhpStorm
