@@ -9,16 +9,19 @@ use Brd6\NotionSdkPhp\ClientOptions;
 use Brd6\NotionSdkPhp\Exception\ApiResponseException;
 use Brd6\NotionSdkPhp\Exception\HttpResponseException;
 use Brd6\NotionSdkPhp\Exception\InvalidPaginationResponseException;
+use Brd6\NotionSdkPhp\Exception\InvalidResourceException;
+use Brd6\NotionSdkPhp\Exception\InvalidResourceTypeException;
 use Brd6\NotionSdkPhp\Exception\RequestTimeoutException;
 use Brd6\NotionSdkPhp\Exception\UnsupportedPaginationResponseTypeException;
-use Brd6\NotionSdkPhp\Resource\Block\ParagraphBlock;
-use Brd6\NotionSdkPhp\Resource\Pagination\AbstractPaginationResults;
+use Brd6\NotionSdkPhp\Exception\UnsupportedUserTypeException;
+use Brd6\NotionSdkPhp\Resource\Block\AbstractBlock;
+use Brd6\NotionSdkPhp\Resource\Block\ChildDatabaseBlock;
+use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
 use Brd6\NotionSdkPhp\Resource\Pagination\PaginationRequest;
 use Http\Client\Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use ValueError;
 
 class UpdateNotionHomeJob implements ShouldQueue
 {
@@ -42,6 +45,7 @@ class UpdateNotionHomeJob implements ShouldQueue
      */
     public function handle(): void
     {
+        // Get notion details
         $token = $this->database->notionWorkspace?->token;
         if ($token === null) {
             Log::error('No token found for database '.$this->database->id);
@@ -51,42 +55,69 @@ class UpdateNotionHomeJob implements ShouldQueue
         }
         $homePageId = $this->database->notion_home_id;
 
-        // Paginate through children
+        // Create notion client
         $options = (new ClientOptions)
             ->setAuth($token);
-
         $notion = new Client($options);
 
-        // TODO: FIrst attempt: Paginate through all children and print them out
-        // make sure it works for more than 100
-        $children = [];
+        // Find child blocks to delete
+        $blocksToDelete = [];
         try {
-            $homePageContent = $notion->blocks()->children()->list($homePageId);
-            $newChildren = $this->getNewChildren($homePageContent);
-            $children = array_merge($children, $newChildren);
-
-            while ($homePageContent->isHasMore()) {
+            /** @var ?string $nextCursor */
+            $nextCursor = null;
+            $databaseFound = false;
+            /** @var array<string> $blocksToDelete */
+            do {
+                // Request children and set new cursor, if there are more
                 $request = new PaginationRequest;
-                $request->setStartCursor($homePageContent->getNextCursor());
+                if ($nextCursor !== null) {
+                    $request->setStartCursor($nextCursor);
+                }
                 $homePageContent = $notion->blocks()->children()->list($homePageId, $request);
-                $newChildren = $this->getNewChildren($homePageContent);
-                $children = array_merge($children, $newChildren);
-            }
+                if ($homePageContent->isHasMore()) {
+                    $nextCursor = $homePageContent->getNextCursor();
+                }
+
+                // Parse children, determining which to delete
+                $children = $homePageContent->getResults();
+                for ($i = 0; $i < count($children); $i++) {
+                    // Start deleting once first database found
+                    /** @var AbstractBlock $child */
+                    $child = $children[$i];
+                    if ((! $databaseFound) && $child instanceof ChildDatabaseBlock) {
+                        $databaseFound = true;
+
+                        continue;
+                    }
+
+                    // Delete if not a database or page
+                    if ($databaseFound && (! ($child instanceof ChildPageBlock)) && (! ($child instanceof ChildDatabaseBlock))) {
+                        // todo:
+                        $id = $child->getId();
+                        $blocksToDelete[] = $id;
+                    }
+                }
+            } while ($homePageContent->isHasMore());
         } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
             Log::error('Error getting children', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;
+        } catch (InvalidResourceException|InvalidResourceTypeException|UnsupportedUserTypeException $e) {
+            Log::error('Error getting children', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
         }
 
-        for ($i = 0; $i < count($children); $i++) {
-            Log::info('Got children', ['children' => $children[$i]]);
+        // Delete child blocks
+        if (count($blocksToDelete) > 0) {
+            foreach ($blocksToDelete as $blockID) {
+                try {
+                    $notion->blocks()->delete($blockID);
+                } catch (ApiResponseException|HttpResponseException|InvalidResourceException|InvalidResourceTypeException|RequestTimeoutException|UnsupportedUserTypeException|Exception $e) {
+                    Log::error('Error deleting block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
+                }
+            }
         }
 
-        //        foreach ($children->getResults() as $child) {
-        //            $notion->blocks()->delete($child->getId());
-        //        }
-
-        // - Delete everything after the database (see database ID in NotionDatabase model)
+        // TODO:
         // - (first attempt: just submit names, not links)
         // - From sourcesync, get documents
         // - Arrange as a tree
@@ -98,29 +129,5 @@ class UpdateNotionHomeJob implements ShouldQueue
         // - Save notion page ID to `Document` when syncing
         // - Update the above to create links
         Log::info('UpdateNotionHomeJob handled');
-    }
-
-    /**
-     * @return array|array[]
-     */
-    public function getNewChildren(AbstractPaginationResults $homePageContent
-    ): array {
-        return array_map(function ($child) {
-            if (! is_object($child)) {
-                Log::error('Child is not an object', ['child' => $child]);
-                throw new ValueError('$child is not an object');
-            }
-
-            $textContent = 'Unsupported block';
-            if ($child instanceof ParagraphBlock) {
-                $richText = $child->getParagraph()->getRichText();
-                $textContent = count($richText) > 0 ? $richText[0]->getPlainText() : '(empty)';
-            }
-
-            return [
-                'id' => $child->getId(),
-                'textContent' => $textContent,
-            ];
-        }, $homePageContent->getResults());
     }
 }
