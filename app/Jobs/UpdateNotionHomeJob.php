@@ -17,7 +17,10 @@ use Brd6\NotionSdkPhp\Exception\UnsupportedUserTypeException;
 use Brd6\NotionSdkPhp\Resource\Block\AbstractBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildDatabaseBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
+use Brd6\NotionSdkPhp\Resource\Block\ParagraphBlock;
 use Brd6\NotionSdkPhp\Resource\Pagination\PaginationRequest;
+use Brd6\NotionSdkPhp\Resource\Property\ParagraphProperty;
+use Brd6\NotionSdkPhp\Resource\RichText\Text;
 use Http\Client\Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -114,6 +117,23 @@ class UpdateNotionHomeJob implements ShouldQueue
                 } catch (ApiResponseException|HttpResponseException|InvalidResourceException|InvalidResourceTypeException|RequestTimeoutException|UnsupportedUserTypeException|Exception $e) {
                     Log::error('Error deleting block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
                 }
+            }
+        }
+
+        $documents = $this->sourceSync->getDocuments();
+
+        foreach ($documents as $document) {
+            $block = new ParagraphBlock;
+            $text = Text::fromContent($document->path);
+            $paragraphProperty = new ParagraphProperty;
+            $paragraphProperty->setRichText([$text]);
+            $block->setParagraph($paragraphProperty);
+            try {
+                $notion->blocks()->children()->append($homePageId, [$block]);
+            } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+                Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
+                /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
+                throw $e;
             }
         }
 
