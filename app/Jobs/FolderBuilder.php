@@ -9,6 +9,7 @@ use App\Models\Source;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use ValueError;
+use Webmozart\Assert\Assert;
 
 class FolderBuilder
 {
@@ -24,16 +25,10 @@ class FolderBuilder
             $relativePath = FolderBuilder::getRelativePath($document, $source);
             $pathParts = explode('/', $relativePath);
 
-            // TODO: replace with assert
             // Expect relative path to start with / and therefore there should be an
             // initial and blank path part.
-            if (count($pathParts) < 2) {
-                throw new ValueError('did not expect count less than 2');
-            }
-
-            if ($pathParts[0] !== '') {
-                throw new ValueError('Expected first part of path parts to be an empty string');
-            }
+            Assert::minCount($pathParts, 2, 'did not expect count less than 2');
+            Assert::eq($pathParts[0], '', 'did not expect first part of path parts to be an empty string');
 
             // Remove initial ''
             array_shift($pathParts);

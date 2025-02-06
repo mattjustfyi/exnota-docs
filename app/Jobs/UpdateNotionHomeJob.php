@@ -27,6 +27,7 @@ use Http\Client\Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Webmozart\Assert\Assert;
 
 class UpdateNotionHomeJob implements ShouldQueue
 {
@@ -36,8 +37,6 @@ class UpdateNotionHomeJob implements ShouldQueue
 
     private SourceSync $sourceSync;
 
-    private FolderBuilder $folderBuilder;
-
     /**
      * Create a new job instance.
      */
@@ -45,7 +44,6 @@ class UpdateNotionHomeJob implements ShouldQueue
     {
         $this->sourceSync = $sourceSync;
         $this->database = $database;
-        $this->folderBuilder = new FolderBuilder($this);
     }
 
     /**
@@ -100,7 +98,6 @@ class UpdateNotionHomeJob implements ShouldQueue
 
                     // Delete if not a database or page
                     if ($databaseFound && (! ($child instanceof ChildPageBlock)) && (! ($child instanceof ChildDatabaseBlock))) {
-                        // todo:
                         $id = $child->getId();
                         $blocksToDelete[] = $id;
                     }
@@ -110,8 +107,6 @@ class UpdateNotionHomeJob implements ShouldQueue
             Log::error('Error getting children', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;
-        } catch (InvalidResourceException|InvalidResourceTypeException|UnsupportedUserTypeException $e) {
-            Log::error('Error getting children', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
         }
 
         // Delete child blocks
@@ -135,16 +130,11 @@ class UpdateNotionHomeJob implements ShouldQueue
         // - Folder{files:string[], folders:Folder[]}
 
         $source = $this->sourceSync->source;
-        // TODO: Replace with assert
-        if ($source === null) {
-            Log::error('No source found for source sync '.$this->sourceSync->id);
-            $this->release();
-
-            return;
-        }
+        Assert::notNull($source);
 
         $rootFolder = FolderBuilder::build($documents, $source);
         try {
+            // TODO: Update to export subfolders too
             $blocks = [];
             foreach ($rootFolder->getFiles() as $file) {
                 $block = new ParagraphBlock;
