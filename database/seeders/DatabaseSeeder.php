@@ -46,15 +46,17 @@ class DatabaseSeeder extends Seeder
             'path' => '/tests/Data/Docs/OneLevel',
             'notion_database_id' => $database->id,
         ]);
-        $doc1 = document::factory()
+        $doc1 = Document::factory()
             ->contentfromfile('/users/matt/code/exnota-docs/tests/data/docs/onelevel/in-case-of-emergency.md')
             ->create([
                 'source_id' => $source->id,
+                'path' => '/tests/Data/Docs/OneLevel/in-case-of-emergency.md',
             ]);
-        $doc2 = document::factory()
+        $doc2 = Document::factory()
             ->contentfromfile('/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md')
             ->create([
                 'source_id' => $source->id,
+                'path' => '/tests/Data/Docs/OneLevel/about/Values.md',
             ]);
 
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\NotionDatabase;
@@ -34,6 +36,8 @@ class UpdateNotionHomeJob implements ShouldQueue
 
     private SourceSync $sourceSync;
 
+    private FolderBuilder $folderBuilder;
+
     /**
      * Create a new job instance.
      */
@@ -41,6 +45,7 @@ class UpdateNotionHomeJob implements ShouldQueue
     {
         $this->sourceSync = $sourceSync;
         $this->database = $database;
+        $this->folderBuilder = new FolderBuilder($this);
     }
 
     /**
@@ -122,21 +127,39 @@ class UpdateNotionHomeJob implements ShouldQueue
 
         $documents = $this->sourceSync->getDocuments();
 
-        foreach ($documents as $document) {
-            $block = new ParagraphBlock;
-            $text = Text::fromContent($document->path);
-            $paragraphProperty = new ParagraphProperty;
-            $paragraphProperty->setRichText([$text]);
-            $block->setParagraph($paragraphProperty);
-            try {
-                $notion->blocks()->children()->append($homePageId, [$block]);
-            } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
-                Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
-                /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
-                throw $e;
-            }
+        // How to make into a tree
+        // 1. Fix database seeder so the source path is the base of the documents' paths
+        // - for each document
+        // - subtract the source path from the file path
+        // - convert to a basic tree structure with folders and files, the latter of which are leaf nodes
+        // - Folder{files:string[], folders:Folder[]}
+
+        $source = $this->sourceSync->source;
+        // TODO: Replace with assert
+        if ($source === null) {
+            Log::error('No source found for source sync '.$this->sourceSync->id);
+            $this->release();
+
+            return;
         }
 
+        $rootFolder = FolderBuilder::build($documents, $source);
+        try {
+            $blocks = [];
+            foreach ($rootFolder->getFiles() as $file) {
+                $block = new ParagraphBlock;
+                $text = Text::fromContent($file);
+                $paragraphProperty = new ParagraphProperty;
+                $paragraphProperty->setRichText([$text]);
+                $block->setParagraph($paragraphProperty);
+                $blocks[] = $block;
+            }
+            $notion->blocks()->children()->append($homePageId, $blocks);
+        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+            Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
+            /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
+            throw $e;
+        }
         // TODO:
         // - (first attempt: just submit names, not links)
         // - From sourcesync, get documents

@@ -129,3 +129,11 @@ More: https://github.com/larastan/larastan/blob/3.x/docs/features.md#model-relat
 ### Queries
 
 * `findOrFail` and similar may error if given ID is `mixed` 
+
+## Troubleshooting
+
+### Property hooks and debugging
+
+Class properties defined using property hooks/accessors don't show values in `Threads & Variables` in PhpStorm.
+
+Workaround: Don't use property hooks.
