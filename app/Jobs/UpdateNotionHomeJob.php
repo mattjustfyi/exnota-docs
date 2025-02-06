@@ -19,8 +19,11 @@ use Brd6\NotionSdkPhp\Exception\UnsupportedUserTypeException;
 use Brd6\NotionSdkPhp\Resource\Block\AbstractBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildDatabaseBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
+use Brd6\NotionSdkPhp\Resource\Block\Heading1Block;
+use Brd6\NotionSdkPhp\Resource\Block\Heading2Block;
 use Brd6\NotionSdkPhp\Resource\Block\ParagraphBlock;
 use Brd6\NotionSdkPhp\Resource\Pagination\PaginationRequest;
+use Brd6\NotionSdkPhp\Resource\Property\HeadingProperty;
 use Brd6\NotionSdkPhp\Resource\Property\ParagraphProperty;
 use Brd6\NotionSdkPhp\Resource\RichText\Text;
 use Http\Client\Exception;
@@ -134,8 +137,32 @@ class UpdateNotionHomeJob implements ShouldQueue
 
         $rootFolder = FolderBuilder::build($documents, $source);
         try {
-            // TODO: Update to export subfolders too
             $blocks = [];
+
+            // Spacing
+            $emptyParagraph = new ParagraphBlock;
+            $text = Text::fromContent(' ');
+            $paragraphProperty = new ParagraphProperty;
+            $paragraphProperty->setRichText([$text]);
+            $emptyParagraph->setParagraph($paragraphProperty);
+            $blocks[] = $emptyParagraph;
+
+            // TODO: instead of a dividder use a heading, as dividers don't seem to work with the notion library
+            $h1 = new Heading1Block;
+            $text = Text::fromContent('📚 Documentation');
+            $headingProperty = new HeadingProperty;
+            $headingProperty->setRichText([$text]);
+            $h1->setHeading1($headingProperty);
+            $blocks[] = $h1;
+
+            // Root level
+            $rootH2 = new Heading2Block;
+            $text = Text::fromContent($rootFolder->name);
+            $headingProperty = new HeadingProperty;
+            $headingProperty->setRichText([$text]);
+            $rootH2->setHeading2($headingProperty);
+            $blocks[] = $rootH2;
+
             foreach ($rootFolder->getFiles() as $file) {
                 $block = new ParagraphBlock;
                 $text = Text::fromContent($file);
@@ -144,12 +171,44 @@ class UpdateNotionHomeJob implements ShouldQueue
                 $block->setParagraph($paragraphProperty);
                 $blocks[] = $block;
             }
+
+            // Nested grouped by first level
+            $firstLevelFolders = $rootFolder->getFolders();
+            foreach ($firstLevelFolders as $folder) {
+                // Heading
+                $heading = new Heading2Block;
+                $text = Text::fromContent($folder->name);
+                $headingProperty = new HeadingProperty;
+                $headingProperty->setRichText([$text]);
+                $heading->setHeading2($headingProperty);
+                $blocks[] = $heading;
+
+                // Files
+                foreach ($folder->getFiles() as $file) {
+                    $block = new ParagraphBlock;
+                    $text = Text::fromContent($file);
+                    $paragraphProperty = new ParagraphProperty;
+                    $paragraphProperty->setRichText([$text]);
+                    $block->setParagraph($paragraphProperty);
+                    $blocks[] = $block;
+                }
+            }
+
             $notion->blocks()->children()->append($homePageId, $blocks);
         } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
             throw $e;
         }
+
+        // TODO: How can I run this even faster
+        // steps
+        // - optional: pamfs -vvv (refresh db)
+        // - exit tinker
+        // - open tinker
+        // - do the breakpoint/focus dance
+        // - run 3 commands
+
         // TODO:
         // - (first attempt: just submit names, not links)
         // - From sourcesync, get documents
