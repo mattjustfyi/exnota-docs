@@ -1,18 +1,22 @@
 <!-- TOC -->
+
 * [Exnota Docs](#exnota-docs)
-  * [Useful commands](#useful-commands)
-  * [Bugs](#bugs)
-  * [Testing](#testing)
-    * [Full sync](#full-sync)
-    * [Export single document](#export-single-document)
-    * [Notion export: Single job](#notion-export-single-job-)
-    * [Home update](#home-update)
-  * [PhpStorm](#phpstorm)
-    * [When listening for debug connections](#when-listening-for-debug-connections-)
-  * [PHPStan/Larastan](#phpstanlarastan)
-    * [Factories](#factories)
-    * [Eloquent/model relationships](#eloquentmodel-relationships)
-    * [Queries](#queries)
+    * [Useful commands](#useful-commands)
+    * [Bugs](#bugs)
+    * [Testing](#testing)
+        * [Full sync](#full-sync)
+        * [Export single document](#export-single-document)
+        * [Notion export: Single job](#notion-export-single-job)
+        * [Home update](#home-update)
+    * [PhpStorm](#phpstorm)
+        * [When listening for debug connections](#when-listening-for-debug-connections)
+    * [PHPStan/Larastan](#phpstanlarastan)
+        * [Factories](#factories)
+        * [Eloquent/model relationships](#eloquentmodel-relationships)
+        * [Queries](#queries)
+    * [Troubleshooting](#troubleshooting)
+        * [Property hooks and debugging](#property-hooks-and-debugging)
+
 <!-- TOC -->
 
 # Exnota Docs
@@ -20,6 +24,7 @@
 ## Useful commands
 
 Run phpstan on project.
+
 ```bash
 # Default PHP
 vendor/bin/phpstan analyze --memory-limit 1024M
@@ -32,14 +37,22 @@ herd php vendor/bin/phpstan analyze --memory-limit 1024M app/Jobs/CreatePageJob.
 ```
 
 Re-generate models. Will need to revert changes to factories.
+
 ```bash
 pa blueprint:build -m
 ```
 
+Run some test code locally with full server context:
+
+```bash
+# php artisan tinker ...
+pat --execute="include('tests/Manual/UpdateNotionHomeTest.php')"
+```
+
 ## Bugs
 
-- Empty table cells need at least a space, if they are not the last row cell. 
-  - E.g.
+- Empty table cells need at least a space, if they are not the last row cell.
+    - E.g.
       ```markdown
       ### Error
       | Action Item | Owner | Issue | Notes |
@@ -51,7 +64,7 @@ pa blueprint:build -m
       |-------------|-------|-------|-------|
       |action item| |issue||
       ```
-  - Real example: `tests/Data/Docs/OneLevel/postmortems/Postmortem-Beta-1-Release.md`
+    - Real example: `tests/Data/Docs/OneLevel/postmortems/Postmortem-Beta-1-Release.md`
 
 ## Testing
 
@@ -65,16 +78,17 @@ App\Jobs\CreateSourceSyncJob::dispatch($source);1;
 ### Export single document
 
 * From database: Construct JSON from database and send to create.js
-    ```bash
-    sqlite3 ../../database/database.sqlite "`cat ../../tools/export_data.sql`" | node create.js
-    ```
+  ```bash
+  sqlite3 ../../database/database.sqlite "`cat ../../tools/export_data.sql`" | node create.js
+  ```
 
 * From file
-    ```bash
-    cd cmd/notion-export
-    node create.js <<< '{"token": "<token>", "databaseId": "<notion database id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
-    ```
-### Notion export: Single job 
+  ```bash
+  cd cmd/notion-export
+  node create.js <<< '{"token": "<token>", "databaseId": "<notion database id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
+  ```
+
+### Notion export: Single job
 
 ```php
 $source = Source::find(1);
@@ -82,13 +96,14 @@ $source = Source::find(1);
 $sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
 
 $doc = Document::factory() \
-    ->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/In-case-of-emergency.md')
-    ->create(['source_id' => $source->id]);
+	->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/In-case-of-emergency.md')
+	->create(['source_id' => $source->id]);
 
  App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
 ```
 
 ### Home update
+
 ```php
 $source = Source::find(1);
 // Currently SourceSync isn't used much by CreatePageJob
@@ -99,11 +114,13 @@ App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $sourceSync->source->notionD
 
 ## PhpStorm
 
-### When listening for debug connections 
+### When listening for debug connections
 
-It will pause every time it detects a new debug connection. This seems different from the `PHP: Break at first line in PHP scripts` setting.
+It will pause every time it detects a new debug connection. This seems different from the
+`PHP: Break at first line in PHP scripts` setting.
 
-E.g. if you start a queue worker while listening, it will pause and you need to resume before the worker will actually run. It is annoying.
+E.g. if you start a queue worker while listening, it will pause and you need to resume before the worker will actually
+run. It is annoying.
 
 ## PHPStan/Larastan
 
@@ -124,11 +141,12 @@ class NotionWorkspaceFactory extends Factory
 public function notionDatabases(): HasMany
 {
 ```
+
 More: https://github.com/larastan/larastan/blob/3.x/docs/features.md#model-relationships
 
 ### Queries
 
-* `findOrFail` and similar may error if given ID is `mixed` 
+* `findOrFail` and similar may error if given ID is `mixed`
 
 ## Troubleshooting
 

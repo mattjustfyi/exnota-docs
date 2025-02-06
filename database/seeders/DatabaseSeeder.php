@@ -9,6 +9,7 @@ use App\Models\NotionWorkspace;
 use App\Models\Repository;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -46,18 +47,36 @@ class DatabaseSeeder extends Seeder
             'path' => '/tests/Data/Docs/OneLevel',
             'notion_database_id' => $database->id,
         ]);
-        $doc1 = Document::factory()
-            ->contentfromfile('/users/matt/code/exnota-docs/tests/data/docs/onelevel/in-case-of-emergency.md')
-            ->create([
-                'source_id' => $source->id,
-                'path' => '/tests/Data/Docs/OneLevel/in-case-of-emergency.md',
-            ]);
-        $doc2 = Document::factory()
-            ->contentfromfile('/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md')
-            ->create([
-                'source_id' => $source->id,
-                'path' => '/tests/Data/Docs/OneLevel/about/Values.md',
-            ]);
 
+        $paths = $this->localFilePaths();
+
+        foreach ($paths as $path) {
+            Document::factory()
+                ->contentfromfile($path['absolute'])
+                ->create([
+                    'source_id' => $source->id,
+                    'path' => $path['relative'],
+                ]);
+        }
+
+    }
+
+    /**
+     * @return array<int, array{relative: string, absolute: string}>
+     */
+    private function localFilePaths(): array
+    {
+        $sourcePath = base_path('tests/Data/Docs/OneLevel');
+        $files = File::allFiles($sourcePath);
+
+        $projectRelativePath = base_path();
+
+        /** @var array<int, array{absolute: string, relative: string}>  $paths */
+        $paths = array_map(fn ($file) => [
+            'absolute' => $file->getPathname(),
+            'relative' => str_replace($projectRelativePath, '', $file->getPathname()),
+        ], $files);
+
+        return $paths;
     }
 }
