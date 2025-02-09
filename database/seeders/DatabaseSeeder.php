@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Shared
         User::factory()->create([
             'name' => 'Matt',
             'email' => 'email@matt.fyi',
@@ -43,12 +44,30 @@ class DatabaseSeeder extends Seeder
             'token' => config('services.github.token'),
         ]);
 
+        // Source: OneLevel test data
         $source = $repository->sources()->create([
             'path' => '/tests/Data/Docs/OneLevel',
             'notion_database_id' => $database->id,
         ]);
 
-        $paths = $this->localFilePaths();
+        $paths = $this->localFilePaths('tests/Data/Docs/OneLevel');
+
+        foreach ($paths as $path) {
+            Document::factory()
+                ->contentfromfile($path['absolute'])
+                ->create([
+                    'source_id' => $source->id,
+                    'path' => $path['relative'],
+                ]);
+        }
+
+        // Source: ThreeLevel test data
+        $source = $repository->sources()->create([
+            'path' => '/tests/Data/Docs/ThreeLevel',
+            'notion_database_id' => $database->id,
+        ]);
+
+        $paths = $this->localFilePaths('tests/Data/Docs/ThreeLevel');
 
         foreach ($paths as $path) {
             Document::factory()
@@ -64,9 +83,9 @@ class DatabaseSeeder extends Seeder
     /**
      * @return array<int, array{relative: string, absolute: string}>
      */
-    private function localFilePaths(): array
+    private function localFilePaths(string $path): array
     {
-        $sourcePath = base_path('tests/Data/Docs/OneLevel');
+        $sourcePath = base_path($path);
         $files = File::allFiles($sourcePath);
 
         $projectRelativePath = base_path();

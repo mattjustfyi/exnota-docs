@@ -21,6 +21,7 @@ use Brd6\NotionSdkPhp\Resource\Block\ChildDatabaseBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
 use Brd6\NotionSdkPhp\Resource\Block\Heading1Block;
 use Brd6\NotionSdkPhp\Resource\Block\Heading2Block;
+use Brd6\NotionSdkPhp\Resource\Block\Heading3Block;
 use Brd6\NotionSdkPhp\Resource\Block\ParagraphBlock;
 use Brd6\NotionSdkPhp\Resource\Pagination\PaginationRequest;
 use Brd6\NotionSdkPhp\Resource\Property\HeadingProperty;
@@ -157,7 +158,8 @@ class UpdateNotionHomeJob implements ShouldQueue
 
             // Root level
             $rootH2 = new Heading2Block;
-            $text = Text::fromContent($rootFolder->name);
+            // [h2] added temporarily to aid testing; it's hard to distinguish in Notion
+            $text = Text::fromContent('[h2] '.$rootFolder->name);
             $headingProperty = new HeadingProperty;
             $headingProperty->setRichText([$text]);
             $rootH2->setHeading2($headingProperty);
@@ -172,18 +174,18 @@ class UpdateNotionHomeJob implements ShouldQueue
                 $blocks[] = $block;
             }
 
-            // Nested grouped by first level
+            // Level 1 folders
             $firstLevelFolders = $rootFolder->getFolders();
             foreach ($firstLevelFolders as $folder) {
-                // Heading
+                // Level 1 name
                 $heading = new Heading2Block;
-                $text = Text::fromContent($folder->name);
+                $text = Text::fromContent('[h2] '.$folder->name);
                 $headingProperty = new HeadingProperty;
                 $headingProperty->setRichText([$text]);
                 $heading->setHeading2($headingProperty);
                 $blocks[] = $heading;
 
-                // Files
+                // Level 1 files
                 foreach ($folder->getFiles() as $file) {
                     $block = new ParagraphBlock;
                     $text = Text::fromContent($file);
@@ -192,22 +194,40 @@ class UpdateNotionHomeJob implements ShouldQueue
                     $block->setParagraph($paragraphProperty);
                     $blocks[] = $block;
                 }
+
+                // Level 2 folders
+                $secondLevelFolders = $folder->getFolders();
+                foreach ($secondLevelFolders as $secondLevelFolder) {
+                    // Level 2 name
+                    $heading = new Heading3Block;
+                    $text = Text::fromContent('[h3] '.$secondLevelFolder->name);
+                    $headingProperty = new HeadingProperty;
+                    $headingProperty->setRichText([$text]);
+                    $heading->setHeading3($headingProperty);
+                    $blocks[] = $heading;
+
+                    // Level 2 files
+                    foreach ($secondLevelFolder->getFiles() as $file) {
+                        $block = new ParagraphBlock;
+                        $text = Text::fromContent($file);
+                        $paragraphProperty = new ParagraphProperty;
+                        $paragraphProperty->setRichText([$text]);
+                        $block->setParagraph($paragraphProperty);
+                        $blocks[] = $block;
+                    }
+                }
             }
 
-            $notion->blocks()->children()->append($homePageId, $blocks);
+            // Notion has a 100 limit for the number of blocks appended at once
+            $blockChunks = array_chunk($blocks, 100);
+            foreach ($blockChunks as $blockChunk) {
+                $notion->blocks()->children()->append($homePageId, $blockChunk);
+            }
         } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
             throw $e;
         }
-
-        // TODO: How can I run this even faster
-        // steps
-        // - optional: pamfs -vvv (refresh db)
-        // - exit tinker
-        // - open tinker
-        // - do the breakpoint/focus dance
-        // - run 3 commands
 
         // TODO:
         // - (first attempt: just submit names, not links)
