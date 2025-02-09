@@ -78,6 +78,13 @@ try {
                     auth: token,
                 });
 
+                const chunkSize = 100;
+                const blockChunks = [];
+                for (let i = 0; i < blocks.length; i += chunkSize) {
+                    blockChunks.push(blocks.slice(i, i + chunkSize));
+                }
+
+
                 console.log("Creating page in Notion");
                 const pagePropResp = await notion.pages.create({
                     parent: {
@@ -90,14 +97,20 @@ try {
                             title: titleRichText,
                         },
                     },
-                    children: blocks,
+                    children: blockChunks[0],
                 });
                 console.log(pagePropResp);
-                // console.log('Appending children in Notion');
-                // const blockAppRes = await notion.blocks.children.append({
-                //     block_id: page,
-                //     children: blocks,
-                // });
+
+                // Append remaining blocks in separate calls
+                const pageId = pagePropResp.id; // Retrieve created page's ID
+                for (let i = 1; i < blockChunks.length; i++) {
+                    console.log(`Appending chunk ${i} to page`);
+                    await notion.blocks.children.append({
+                        block_id: pageId,
+                        children: blockChunks[i],
+                    });
+                    console.log(`Chunk ${i} appended successfully`);
+                }
             } catch (e) {
                 console.info(e);
                 console.info('Blocks', blocks);
