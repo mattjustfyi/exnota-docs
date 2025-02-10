@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use Illuminate\Support\Facades\Log;
+use Webmozart\Assert\Assert;
 
 class LinkUpdater
 {
@@ -17,16 +18,25 @@ class LinkUpdater
 
     public function update(): string
     {
-        $this->removeInternal();
+        $this->removeSamePageAnchor();
+        $this->removeRelativeNonNestedLinks();
 
         return $this->content;
     }
 
-    private function removeInternal(): void
+    private function removeSamePageAnchor(): void
     {
-        // Regex, with group for text: \[([^\]]+)\]\(#[^\)]+\)
-        $this->content = preg_replace('/\[([^\]]+)\]\(#[^\)]+\)/', '\'$1\'', $this->content, -1, $count);
+        $replaced = preg_replace('/\[([^]]+)]\(#[^)]+\)/', '\'$1\'', $this->content, -1, $count);
+        Assert::string($replaced);
+        $this->content = $replaced;
         Log::info('Made {count} replacements', ['count' => $count]);
-        // TODO:
+    }
+
+    private function removeRelativeNonNestedLinks(): void
+    {
+        $replaced = preg_replace('/\[([^]]+)]\(\.{1,2}\/[^)]+\)/', '\'$1\'', $this->content, -1, $count);
+        Assert::string($replaced);
+        $this->content = $replaced;
+        Log::info('Made {count} replacements', ['count' => $count]);
     }
 }

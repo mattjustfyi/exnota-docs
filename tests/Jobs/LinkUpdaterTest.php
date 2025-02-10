@@ -148,4 +148,30 @@ EOD;
         $result = $updater->update();
         $this->assertEquals($expected, $result);
     }
+
+    public function test_update_removes_relative_internal_links(): void
+    {
+        $content = <<<'EOD'
+"Third party code" that is not part of a Dart package must be in a subdirectory of a `third_party` directory located:
+
+* [/third_party](../../third_party) for the Flutter Framework
+* [/engine/src/flutter/third_party](../../engine/src/flutter/third_party) for the Flutter Engine.
+
+The subdirectory in question must contain a `LICENSE` file that details the license covering that code and a `README`
+describing the provenance of that code.
+EOD;
+
+        $expected = <<<'EOD'
+"Third party code" that is not part of a Dart package must be in a subdirectory of a `third_party` directory located:
+
+* '/third_party' for the Flutter Framework
+* '/engine/src/flutter/third_party' for the Flutter Engine.
+
+The subdirectory in question must contain a `LICENSE` file that details the license covering that code and a `README`
+describing the provenance of that code.
+EOD;
+        $updater = new LinkUpdater($content);
+        $result = $updater->update();
+        $this->assertEquals($expected, $result);
+    }
 }

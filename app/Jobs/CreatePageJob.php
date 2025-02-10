@@ -32,11 +32,10 @@ class CreatePageJob implements ShouldQueue
 
     public function handle(): void
     {
+        Log::info('CreatePageJob started for document: '.$this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
             return;
         }
-
-        Log::info('CreatePageJob handled for document: '.$this->document->id);
 
         $source = $this->document->source;
         $notionDatabase = $source?->notionDatabase;
@@ -58,7 +57,8 @@ class CreatePageJob implements ShouldQueue
         }
 
         $filePath = $this->document->path;
-        $content = $this->document->content;
+        $linkUpdater = new LinkUpdater($this->document->content);
+        $content = $linkUpdater->update();
 
         Log::info('CreatePageJob values', [
             'token' => $token,
