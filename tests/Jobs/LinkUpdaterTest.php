@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 class LinkUpdaterTest extends TestCase
 {
-    public function test_update(): void
+    public function test_update_replaces_internal(): void
     {
         $content = <<<'EOD'
 # Data-driven Fixes
@@ -122,6 +122,27 @@ then invocations of the old method will produce a diagnostic indicating that the
 if the old method is still declared and marked as being deprecated because a diagnostic is also produced in that case.
 Because of that, we encourage you to add data for an API when the API is first deprecated. If the API doesn’t go through
 a deprecation period, then the changes should be added to the data when the changes are made.
+EOD;
+        $updater = new LinkUpdater($content);
+        $result = $updater->update();
+        $this->assertEquals($expected, $result);
+    }
+
+    public function test_update_does_not_replace_external(): void
+    {
+        $content = <<<'EOD'
+For more on debugging, including detailed information on `launch.json`, in VS Code refer to the VS Code
+[documentation](https://code.visualstudio.com/docs/editor/debugging).
+
+For more on debugging, including detailed information on `launch.json`, in VS Code refer to the VS Code
+[documentation](http://code.visualstudio.com/docs/editor/debugging).
+EOD;
+        $expected = <<<'EOD'
+For more on debugging, including detailed information on `launch.json`, in VS Code refer to the VS Code
+[documentation](https://code.visualstudio.com/docs/editor/debugging).
+
+For more on debugging, including detailed information on `launch.json`, in VS Code refer to the VS Code
+[documentation](http://code.visualstudio.com/docs/editor/debugging).
 EOD;
         $updater = new LinkUpdater($content);
         $result = $updater->update();
