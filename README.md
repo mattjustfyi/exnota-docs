@@ -7,6 +7,7 @@
         * [Full sync](#full-sync)
         * [Export single document](#export-single-document)
         * [Notion export: Single job](#notion-export-single-job)
+        * [Notion export: All jobs](#notion-export-all-jobs)
         * [Home update](#home-update)
     * [PhpStorm](#phpstorm)
         * [When listening for debug connections](#when-listening-for-debug-connections)
@@ -79,13 +80,13 @@ App\Jobs\CreateSourceSyncJob::dispatch($source);1;
 
 * From database: Construct JSON from database and send to create.js
   ```bash
-  sqlite3 ../../database/database.sqlite "`cat ../../tools/export_data.sql`" | node create.js
-  ```
+  sqlite3 ../../database/database.sqlite "`cat ../../tools/export_data.sql`" | node --inspect-brk create.js
+  ``
 
 * From file
   ```bash
   cd cmd/notion-export
-  node create.js <<< '{"token": "<token>", "databaseId": "<notion database id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
+  node --inspect-brk create.js <<< '{"token": "<token>", "databaseId": "<notion database id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
   ```
 
 ### Notion export: Single job
@@ -96,10 +97,16 @@ $source = Source::find(1);
 $sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
 
 $doc = Document::factory() \
-	->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/In-case-of-emergency.md')
+	->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/ThreeLevel/contributing/Style-guide-for-Flutter-repo.md') \
 	->create(['source_id' => $source->id]);
 
  App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
+```
+
+### Notion export: All jobs
+
+```bash
+pat --execute="include('tests/Manual/CreatePageTest.php')"
 ```
 
 ### Home update
@@ -113,6 +120,12 @@ App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $sourceSync->source->notionD
 ```
 
 ## PhpStorm
+
+### Debugging node.js scripts
+
+**Debug** the `Listen for Node.js` config and pass ` --inspect-brk` to `node` command.
+
+Reference: https://www.jetbrains.com/help/phpstorm/running-and-debugging-node-js.html#node_debugging_running_application
 
 ### When listening for debug connections
 

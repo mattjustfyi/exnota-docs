@@ -1,6 +1,7 @@
 const {markdownToBlocks} = require("@tryfabric/martian");
 const {Client} = require("@notionhq/client");
 const fs = require("fs");
+const {trimNestedChildren} = require("./utils/trim-nested-children");
 
 try {
     (async () => {
@@ -50,6 +51,9 @@ try {
 
                 console.log('Converting to blocks');
                 blocks = markdownToBlocks(finalContent);
+
+                blocks = trimNestedChildren(
+                    blocks);
 
                 // Extract h1
                 const h1Indexes = blocks
