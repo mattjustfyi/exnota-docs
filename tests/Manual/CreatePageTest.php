@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Webmozart\Assert\Assert;
 
 // Data created in DatabaseSeeder.php
+Log::info('Starting CreatePageTest');
 $source = Source::find(2);
 Assert::notNull($source);
 $documents = $source->documents;
@@ -45,3 +46,5 @@ $pendingBatch = Bus::batch($createPageJobs)->before(function () {
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $pendingBatch->dispatch();
+
+Log::info('Dispatched batch for CreatePageTest');

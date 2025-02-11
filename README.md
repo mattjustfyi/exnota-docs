@@ -11,6 +11,8 @@
         * [Home update](#home-update)
     * [PhpStorm](#phpstorm)
         * [Debugging node.js scripts](#debugging-nodejs-scripts)
+            * [Directly](#directly)
+            * [Called from PHP](#called-from-php)
         * [When listening for debug connections](#when-listening-for-debug-connections)
     * [PHPStan/Larastan](#phpstanlarastan)
         * [Factories](#factories)
@@ -104,7 +106,7 @@ $sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
 
 $doc = Document::find(55); 
 
- App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
+App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
 ```
 
 New document from file:
@@ -141,9 +143,21 @@ App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $sourceSync->source->notionD
 
 ### Debugging node.js scripts
 
+#### Directly
+
 **Debug** the `Listen for Node.js` config and pass ` --inspect-brk` to `node` command.
 
 Reference: https://www.jetbrains.com/help/phpstorm/running-and-debugging-node-js.html#node_debugging_running_application
+
+#### Called from PHP
+
+1. Set `APP_DEBUG_NODE=true` in .env
+2. Run the PHP that calls the Node.js command.
+3. You should see a log like this while Node.js pauses and waits for the debugger to be started to continue:
+   ```bash
+   [2025-02-11 08:49:58] local.INFO: Received log from create.js {"data":"Debugger listening on ws://127.0.0.1:9229/9181d41d-15cf-4a30-ab2b-c4f87cee328a
+   ```
+4. Run `Listen for Node.js`
 
 ### When listening for debug connections
 

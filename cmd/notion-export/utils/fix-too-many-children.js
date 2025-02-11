@@ -1,4 +1,4 @@
-function trimNestedChildren(blocks) {
+function fixTooManyChildren(blocks) {
     return blocks.filter(block => {
         switch (block.type) {
             case 'table':
@@ -26,5 +26,5 @@ function filterTable(block) {
 }
 
 module.exports = {
-    trimNestedChildren,
+    trimNestedChildren: fixTooManyChildren,
 };

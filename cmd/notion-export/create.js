@@ -1,7 +1,8 @@
 const {markdownToBlocks} = require("@tryfabric/martian");
 const {Client} = require("@notionhq/client");
 const fs = require("fs");
-const {trimNestedChildren} = require("./utils/trim-nested-children");
+const {trimNestedChildren} = require("./utils/fix-too-many-children");
+const {fixTooDeepChildren} = require("./utils/fix-too-deep-children");
 
 try {
     (async () => {
@@ -15,7 +16,6 @@ try {
 
         console.log("Listening for 'end'");
         process.stdin.on("end", async () => {
-            console.log('Received input', input);
             let blocks;
             try {
                 console.log('Received end');
@@ -49,10 +49,14 @@ try {
                     throw new Error("Content is required.");
                 }
 
+                // Convert content to blocks
                 console.log('Converting to blocks');
                 blocks = markdownToBlocks(finalContent);
 
+                // Workarounds for Notion errors
                 blocks = trimNestedChildren(
+                    blocks);
+                fixTooDeepChildren(
                     blocks);
 
                 // Extract h1

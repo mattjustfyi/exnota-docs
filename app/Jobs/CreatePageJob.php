@@ -60,14 +60,9 @@ class CreatePageJob implements ShouldQueue
         $linkUpdater = new LinkUpdater($this->document->content);
         $content = $linkUpdater->update();
 
-        Log::info('CreatePageJob values', [
-            'token' => $token,
-            'databaseId' => $databaseId,
-            'content' => $content,
-            'filePath' => $filePath,
-        ]);
-
-        $cmd = 'node cmd/notion-export/create.js';
+        $cmd = config('app.debug_node')
+            ? 'node --inspect-brk cmd/notion-export/create.js'
+            : 'node cmd/notion-export/create.js';
         $payload = json_encode([
             'token' => $token,
             'databaseId' => $databaseId,
@@ -84,13 +79,19 @@ class CreatePageJob implements ShouldQueue
         $process->setInput($payload);
         $process->run(function ($type, $data) {
             if ($type === Process::ERR) {
-                Log::error('Error running create.js', [
-                    'data' => $data,
-                    'sourceSyncId' => $this->syncSource->id,
-                    'documentId' => $this->document->id,
-                ]);
-                $this->release();
-                throw new RuntimeException('Error running create.js');
+                if (! is_string($data) || (
+                    ! str_starts_with($data, 'Debugger listening on ') &&
+                    ! str_starts_with($data, 'Debugger attached') &&
+                    ! str_starts_with($data, 'Waiting for the debugger to disconnect')
+                )) {
+                    Log::error('Error running create.js', [
+                        'data' => $data,
+                        'sourceSyncId' => $this->syncSource->id,
+                        'documentId' => $this->document->id,
+                    ]);
+                    $this->release();
+                    throw new RuntimeException('Error running create.js');
+                }
             }
             Log::info('Received log from create.js', ['data' => $data]);
         });
