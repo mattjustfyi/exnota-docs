@@ -5,11 +5,12 @@
     * [Bugs](#bugs)
     * [Testing](#testing)
         * [Full sync](#full-sync)
-        * [Export single document](#export-single-document)
-        * [Notion export: Single job](#notion-export-single-job)
-        * [Notion export: All jobs](#notion-export-all-jobs)
+        * [Create page: create.js only](#create-page-createjs-only)
+        * [Create page: Single job](#create-page-single-job)
+        * [Create page: All jobs](#create-page-all-jobs)
         * [Home update](#home-update)
     * [PhpStorm](#phpstorm)
+        * [Debugging node.js scripts](#debugging-nodejs-scripts)
         * [When listening for debug connections](#when-listening-for-debug-connections)
     * [PHPStan/Larastan](#phpstanlarastan)
         * [Factories](#factories)
@@ -76,7 +77,10 @@ $source = App\Models\Source::find(1)
 App\Jobs\CreateSourceSyncJob::dispatch($source);1;
 ```
 
-### Export single document
+### Create page: create.js only
+
+Note: This will skip some cleanup, such as internal link removal as done by LinkUpdater.php. This could be done manually
+using regexs from the class.
 
 * From database: Construct JSON from database and send to create.js
   ```bash
@@ -89,7 +93,7 @@ App\Jobs\CreateSourceSyncJob::dispatch($source);1;
   node --inspect-brk create.js <<< '{"token": "<token>", "databaseId": "<notion database id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
   ```
 
-### Notion export: Single job
+### Create page: Single job
 
 ```php
 $source = Source::find(1);
@@ -103,7 +107,7 @@ $doc = Document::factory() \
  App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
 ```
 
-### Notion export: All jobs
+### Create page: All jobs
 
 ```bash
 pat --execute="include('tests/Manual/CreatePageTest.php')"
