@@ -95,13 +95,27 @@ using regexs from the class.
 
 ### Create page: Single job
 
+Existing document:
+
+```php
+$source = Source::find(1);
+// Currently SourceSync isn't used much by CreatePageJob
+$sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
+
+$doc = Document::find(55); 
+
+ App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
+```
+
+New document from file:
+
 ```php
 $source = Source::find(1);
 // Currently SourceSync isn't used much by CreatePageJob
 $sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
 
 $doc = Document::factory() \
-	->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/ThreeLevel/contributing/Style-guide-for-Flutter-repo.md') \
+	->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/ThreeLevel/contributing/testing/Flutter-Test-Fonts.md') \
 	->create(['source_id' => $source->id]);
 
  App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
