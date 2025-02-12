@@ -174,4 +174,18 @@ EOD;
         $result = $updater->update();
         $this->assertEquals($expected, $result);
     }
+
+    public function test_update_removes_non_http_or_https_links(): void
+    {
+        $content = <<<'EOD'
+Instead of manually updating dependencies in a `pubspec.yaml` file, use the [`update-packages`](packages/flutter_tools/lib/src/commands/update_packages.dart) CLI tool: , use the [`update-packages`](packages/flutter_tools/lib/src/commands/update_packages.dart) CLI tool:
+EOD;
+        $expected = <<<'EOD'
+Instead of manually updating dependencies in a `pubspec.yaml` file, use the '`update-packages`' (packages/flutter_tools/lib/src/commands/update_packages.dart) CLI tool: , use the '`update-packages`' (packages/flutter_tools/lib/src/commands/update_packages.dart) CLI tool:
+EOD;
+
+        $updater = new LinkUpdater($content);
+        $result = $updater->update();
+        $this->assertEquals($expected, $result);
+    }
 }

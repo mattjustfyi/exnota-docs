@@ -21,9 +21,6 @@ $documents = $source->documents;
 Assert::isInstanceOf($documents, Collection::class);
 $documentIDs = array_map(fn ($document) => $document->id, $documents->all());
 $sourceSync = SourceSync::factory()->create(['source_id' => $source->id, 'document_ids' => $documentIDs]);
-$notionDatabase = $source->notionDatabase;
-Assert::notNull($notionDatabase);
-App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $notionDatabase);
 
 $createPageJobs = array_map(function ($document_id) use ($sourceSync) {
     /** @var Document $document */

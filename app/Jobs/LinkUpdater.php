@@ -20,6 +20,7 @@ class LinkUpdater
     {
         $this->removeSamePageAnchor();
         $this->removeRelativeNonNestedLinks();
+        $this->removeNonHttpOrHttpsLinks();
 
         return $this->content;
     }
@@ -34,7 +35,16 @@ class LinkUpdater
 
     private function removeRelativeNonNestedLinks(): void
     {
+        // TODO: Include the path in brackets after
         $replaced = preg_replace('/\[([^]]+)]\(\.{1,2}\/[^)]+\)/', '\'$1\'', $this->content, -1, $count);
+        Assert::string($replaced);
+        $this->content = $replaced;
+        Log::info('Made {count} replacements', ['count' => $count]);
+    }
+
+    private function removeNonHttpOrHttpsLinks(): void
+    {
+        $replaced = preg_replace('/\[([^]]+)]\(((?!https?:\/\/)[^)]+)\)/', '\'$1\' ($2)', $this->content, -1, $count);
         Assert::string($replaced);
         $this->content = $replaced;
         Log::info('Made {count} replacements', ['count' => $count]);
