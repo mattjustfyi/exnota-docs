@@ -35,8 +35,7 @@ class LinkUpdater
 
     private function removeRelativeNonNestedLinks(): void
     {
-        // TODO: Include the path in brackets after
-        $replaced = preg_replace('/\[([^]]+)]\(\.{1,2}\/[^)]+\)/', '\'$1\'', $this->content, -1, $count);
+        $replaced = preg_replace('/\[([^]]+)]\((\.{1,2}\/[^)]+)\)/', '\'$1\' ($2)', $this->content, -1, $count);
         Assert::string($replaced);
         $this->content = $replaced;
         Log::info('Made {count} replacements', ['count' => $count]);
