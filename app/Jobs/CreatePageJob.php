@@ -57,8 +57,12 @@ class CreatePageJob implements ShouldQueue
         }
 
         $filePath = $this->document->path;
+
         $linkUpdater = new LinkUpdater($this->document->content);
         $content = $linkUpdater->update();
+
+        $tableFixer = new TableFixer($content);
+        $content = $tableFixer->fix();
 
         $cmd = config('app.debug_node')
             ? 'node --inspect-brk cmd/notion-export/create.js'
