@@ -36,6 +36,8 @@ class SaveFileJob implements ShouldQueue
     public function handle(): void
     {
         if ($this->batch()->cancelled()) {
+            $this->fail('Batch cancelled');
+
             return;
         }
 

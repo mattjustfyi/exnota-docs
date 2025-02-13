@@ -34,6 +34,9 @@ class CreatePageJob implements ShouldQueue
     {
         Log::info('CreatePageJob started for document: '.$this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
+            Log::info('Batch cancelled. Failing job.');
+            $this->fail('Batch cancelled');
+
             return;
         }
 
@@ -75,7 +78,7 @@ class CreatePageJob implements ShouldQueue
         ]);
         if ($payload === false) {
             Log::error('Failed to encode payload');
-            $this->release();
+            //            $this->release();
             throw new RuntimeException('Failed to encode payload');
         }
 
@@ -93,7 +96,7 @@ class CreatePageJob implements ShouldQueue
                         'sourceSyncId' => $this->syncSource->id,
                         'documentId' => $this->document->id,
                     ]);
-                    $this->release();
+                    //                    $this->release();
                     throw new RuntimeException('Error running create.js');
                 }
             }
