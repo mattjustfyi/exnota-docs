@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Jobs\PageCreator\MessageFactory;
 use App\Models\Document;
 use App\Models\SourceSync;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use JsonException;
 use RuntimeException;
 use Symfony\Component\Process\Process;
+use Webmozart\Assert\Assert;
 
 class CreatePageJob implements ShouldQueue
 {
@@ -100,9 +103,31 @@ class CreatePageJob implements ShouldQueue
                     throw new RuntimeException('Error running create.js');
                 }
             }
-            Log::info('Received log from create.js', ['data' => $data]);
+            Assert::string($data);
+            $this->parseStdout($data);
         });
 
         Log::info('CreatePageJob handled for document: '.$this->document->id);
+    }
+
+    /**
+     * @throws JsonException
+     */
+    public function parseStdout(string $stdout): void
+    {
+        $lines = explode("\n", $stdout);
+        foreach ($lines as $line) {
+            $message = MessageFactory::create($line);
+            if (is_null($message)) {
+                Log::info('Received log from create.js', ['message' => $line]);
+
+                continue;
+            }
+
+            $notionPageId = $message->notionPageId;
+            Log::info('Received log from create.js', ['notionPageId' => $notionPageId]);
+
+            // TODO: What to do with notionpageid?
+        }
     }
 }

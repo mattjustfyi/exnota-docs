@@ -18,7 +18,6 @@ try {
         process.stdin.on("end", async () => {
             let blocks;
             try {
-                console.log('Received end');
                 const {
                     content,
                     // Path in the repo
@@ -109,6 +108,10 @@ try {
                 });
                 console.log(pagePropResp);
 
+                sendMessage('page-created', {
+                    'notionPageID': pagePropResp.id,
+                })
+
                 // Append remaining blocks in separate calls
                 const pageId = pagePropResp.id; // Retrieve created page's ID
                 for (let i = 1; i < blockChunks.length; i++) {
@@ -119,6 +122,7 @@ try {
                     });
                     console.log(`Chunk ${i} appended successfully`);
                 }
+
             } catch (e) {
                 console.info(e);
                 console.info('Blocks', blocks);
@@ -130,4 +134,13 @@ try {
 } catch (e) {
     console.error(e);
     throw e;
+}
+
+function sendMessage(type, payload) {
+    process.stdout.write("\n");
+    process.stdout.write(JSON.stringify({
+        type,
+        payload,
+    }));
+    process.stdout.write("\n");
 }

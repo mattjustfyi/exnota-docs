@@ -139,6 +139,14 @@ $sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
 App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $sourceSync->source->notionDatabase);1; 
 ```
 
+or
+
+```bash
+# php artisan tinker ...
+pat --execute="include('tests/Manual/UpdateNotionHomeTest.php')"
+```
+
+
 ## PhpStorm
 
 ### Debugging node.js scripts
