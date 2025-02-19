@@ -22,7 +22,7 @@ models:
     User: { name: string, email: string, email_verified_at: 'datetime nullable', password: string, remember_token: 'string nullable' }
     Repository: { url: text, token: string, relationships: { hasMany: Source } }
     Source: { path: text, notion_database_id: 'nullable foreign', relationships: { belongsTo: Repository, hasMany: Document } }
-    Document: { path: text, content: text, relationships: { belongsTo: Source } }
+    Document: { path: text, content: text, notion_id: 'string nullable', notion_url: 'string nullable', relationships: { belongsTo: Source } }
     NotionWorkspace: { name: string, token: string, relationships: { hasMany: NotionDatabase } }
     NotionDatabase: { notion_id: string, notion_home_id: string, name: string, relationships: { belongsTo: NotionWorkspace } }
     SourceSync: { file_paths: 'jsonb nullable', document_ids: 'jsonb nullable', relationships: { belongsTo: Source } }

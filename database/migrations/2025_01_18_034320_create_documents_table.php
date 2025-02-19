@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->text('path');
             $table->text('content');
+            $table->string('notion_id')->nullable();
+            $table->string('notion_url')->nullable();
             $table->foreignId('source_id');
             $table->timestamps();
         });

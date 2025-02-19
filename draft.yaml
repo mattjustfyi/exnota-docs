@@ -28,6 +28,8 @@ models:
   Document:
     path: text
     content: text
+    notion_id: string nullable
+    notion_url: string nullable
     relationships:
       belongsTo: Source
 

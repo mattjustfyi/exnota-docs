@@ -43,6 +43,8 @@ herd php vendor/bin/phpstan analyze --memory-limit 1024M app/Jobs/CreatePageJob.
 Re-generate models. Will need to revert changes to factories.
 
 ```bash
+# Update existing migrations
+# For use before we have production data to keep.
 pa blueprint:build -m
 ```
 

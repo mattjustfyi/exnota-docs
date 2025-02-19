@@ -124,6 +124,8 @@ EOD;
             'path' => fake()->filePath(),
             'content' => $content,
             'source_id' => Source::factory(),
+            'notion_id' => $this->faker->uuid(),
+            'notion_url' => $this->faker->url(),
         ];
     }
 
