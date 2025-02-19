@@ -124,8 +124,8 @@ EOD;
             'path' => fake()->filePath(),
             'content' => $content,
             'source_id' => Source::factory(),
-            'notion_id' => $this->faker->uuid(),
-            'notion_url' => $this->faker->url(),
+            // Use notionData() state manipulator to add Notion data. When documents are
+            // initially created, they don't have this data.
         ];
     }
 
@@ -139,6 +139,19 @@ EOD;
         return $this->state(function (array $attributes) use ($content) {
             return [
                 'content' => $content,
+            ];
+        });
+    }
+
+    /**
+     * @return Factory<Document>
+     */
+    public function notionData(): Factory
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'notion_id' => $this->faker->uuid(),
+                'notion_url' => $this->faker->url(),
             ];
         });
     }

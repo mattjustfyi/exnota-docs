@@ -118,10 +118,12 @@ class CreatePageJob implements ShouldQueue
                 continue;
             }
 
-            $notionPageId = $message->notionPageID;
-            Log::info('Received log from create.js', ['notionPageId' => $notionPageId]);
+            $this->document->update([
+                'notion_id' => $message->notionPageID,
+                'notion_url' => $message->notionURL,
+            ]);
 
-            // TODO: What to do with notionpageid?
+            Log::info('Saved Notion page ID and URL');
         }
     }
 }
