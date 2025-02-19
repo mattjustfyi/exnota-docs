@@ -11,7 +11,6 @@ use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
-use JsonException;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 use Webmozart\Assert\Assert;
@@ -81,7 +80,6 @@ class CreatePageJob implements ShouldQueue
         ]);
         if ($payload === false) {
             Log::error('Failed to encode payload');
-            //            $this->release();
             throw new RuntimeException('Failed to encode payload');
         }
 
@@ -99,7 +97,6 @@ class CreatePageJob implements ShouldQueue
                         'sourceSyncId' => $this->syncSource->id,
                         'documentId' => $this->document->id,
                     ]);
-                    //                    $this->release();
                     throw new RuntimeException('Error running create.js');
                 }
             }
@@ -110,9 +107,6 @@ class CreatePageJob implements ShouldQueue
         Log::info('CreatePageJob handled for document: '.$this->document->id);
     }
 
-    /**
-     * @throws JsonException
-     */
     public function parseStdout(string $stdout): void
     {
         $lines = explode("\n", $stdout);
@@ -124,7 +118,7 @@ class CreatePageJob implements ShouldQueue
                 continue;
             }
 
-            $notionPageId = $message->notionPageId;
+            $notionPageId = $message->notionPageID;
             Log::info('Received log from create.js', ['notionPageId' => $notionPageId]);
 
             // TODO: What to do with notionpageid?

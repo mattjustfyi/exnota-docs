@@ -93,7 +93,7 @@ try {
 
 
                 console.log("Creating page in Notion");
-                const pagePropResp = await notion.pages.create({
+                const page = await notion.pages.create({
                     parent: {
                         type: 'database_id',
                         database_id: databaseId,
@@ -106,14 +106,15 @@ try {
                     },
                     children: blockChunks[0],
                 });
-                console.log(pagePropResp);
+                console.log(page);
 
                 sendMessage('page-created', {
-                    'notionPageID': pagePropResp.id,
+                    'notionPageID': page.id,
+                    'notionURL': page.url,
                 })
 
                 // Append remaining blocks in separate calls
-                const pageId = pagePropResp.id; // Retrieve created page's ID
+                const pageId = page.id; // Retrieve created page's ID
                 for (let i = 1; i < blockChunks.length; i++) {
                     console.log(`Appending chunk ${i} to page`);
                     await notion.blocks.children.append({
@@ -140,7 +141,7 @@ function sendMessage(type, payload) {
     process.stdout.write("\n");
     process.stdout.write(JSON.stringify({
         type,
-        payload,
+        ...payload,
     }));
     process.stdout.write("\n");
 }

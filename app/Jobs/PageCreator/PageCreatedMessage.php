@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Jobs\PageCreator;
 
-readonly class PageCreatedMessage
-{
-    public string $notionPageId;
+use Spatie\LaravelData\Attributes\Validation\In;
+use Spatie\LaravelData\Data;
 
-    public function __construct(string $notionPageId)
-    {
-        $this->notionPageId = $notionPageId;
-    }
+class PageCreatedMessage extends Data
+{
+    public function __construct(
+        #[In(['page-created'])]
+        public string $type,
+        public string $notionPageID,
+        public string $notionURL,
+    ) {}
 }
