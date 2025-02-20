@@ -9,7 +9,7 @@ class Folder
     public string $name;
 
     /**
-     * @var array<string>
+     * @var array<File>
      *
      * @noinspection PhpGetterAndSetterCanBeReplacedWithPropertyHooksInspection we want a setter that accepts a single string and i don't think that can be done with a property hook.
      */
@@ -23,14 +23,14 @@ class Folder
     private array $folders = [];
 
     /**
-     * @return string[]
+     * @return File[]
      */
     public function getFiles(): array
     {
         return $this->files;
     }
 
-    public function addFile(string $file): void
+    public function addFile(File $file): void
     {
         $this->files[] = $file;
     }

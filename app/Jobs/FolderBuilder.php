@@ -34,7 +34,13 @@ class FolderBuilder
             array_shift($pathParts);
 
             if (count($pathParts) === 1) {
-                $rootFolder->addFile($pathParts[0]);
+                $notionID = $document->notion_id;
+                $notionURL = $document->notion_url;
+                Assert::notNull($notionID);
+                Assert::notNull($notionURL);
+
+                $file = new File(name: $pathParts[0], notionID: $notionID, notionURL: $notionURL);
+                $rootFolder->addFile($file);
             } else {
                 // Loop through path parts and find the deepest folder that already exists
                 $existingFolder = $rootFolder;
@@ -65,7 +71,13 @@ class FolderBuilder
                     }
                 }
 
-                $existingFolder->addFile($pathParts[count($pathParts) - 1]);
+                $notionID = $document->notion_id;
+                $notionURL = $document->notion_url;
+                Assert::notNull($notionID);
+                Assert::notNull($notionURL);
+
+                $file = new File(name: $pathParts[count($pathParts) - 1], notionID: $notionID, notionURL: $notionURL);
+                $existingFolder->addFile($file);
             }
 
         }

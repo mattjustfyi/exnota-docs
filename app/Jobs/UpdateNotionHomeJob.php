@@ -22,9 +22,11 @@ use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
 use Brd6\NotionSdkPhp\Resource\Block\Heading1Block;
 use Brd6\NotionSdkPhp\Resource\Block\Heading2Block;
 use Brd6\NotionSdkPhp\Resource\Block\Heading3Block;
+use Brd6\NotionSdkPhp\Resource\Block\LinkToPageBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ParagraphBlock;
 use Brd6\NotionSdkPhp\Resource\Pagination\PaginationRequest;
 use Brd6\NotionSdkPhp\Resource\Property\HeadingProperty;
+use Brd6\NotionSdkPhp\Resource\Property\LinkToPageProperty;
 use Brd6\NotionSdkPhp\Resource\Property\ParagraphProperty;
 use Brd6\NotionSdkPhp\Resource\RichText\Text;
 use Http\Client\Exception;
@@ -124,19 +126,13 @@ class UpdateNotionHomeJob implements ShouldQueue
             }
         }
 
+        // Build folder structure
         $documents = $this->sourceSync->getDocuments();
-
-        // How to make into a tree
-        // 1. Fix database seeder so the source path is the base of the documents' paths
-        // - for each document
-        // - subtract the source path from the file path
-        // - convert to a basic tree structure with folders and files, the latter of which are leaf nodes
-        // - Folder{files:string[], folders:Folder[]}
-
         $source = $this->sourceSync->source;
         Assert::notNull($source);
-
         $rootFolder = FolderBuilder::build($documents, $source);
+
+        // Add home page blocks
         try {
             $blocks = [];
 
@@ -148,7 +144,6 @@ class UpdateNotionHomeJob implements ShouldQueue
             $emptyParagraph->setParagraph($paragraphProperty);
             $blocks[] = $emptyParagraph;
 
-            // TODO: instead of a dividder use a heading, as dividers don't seem to work with the notion library
             $h1 = new Heading1Block;
             $text = Text::fromContent('📚 Documentation');
             $headingProperty = new HeadingProperty;
@@ -166,12 +161,11 @@ class UpdateNotionHomeJob implements ShouldQueue
             $blocks[] = $rootH2;
 
             foreach ($rootFolder->getFiles() as $file) {
-                $block = new ParagraphBlock;
-                $text = Text::fromContent($file);
-                $paragraphProperty = new ParagraphProperty;
-                $paragraphProperty->setRichText([$text]);
-                $block->setParagraph($paragraphProperty);
-                $blocks[] = $block;
+                $link = new LinkToPageBlock;
+                $linkProperty = new LinkToPageProperty;
+                $linkProperty->setPageId($file->notionID);
+                $link->setLinkToPage($linkProperty);
+                $blocks[] = $link;
             }
 
             // Level 1 folders
@@ -187,12 +181,11 @@ class UpdateNotionHomeJob implements ShouldQueue
 
                 // Level 1 files
                 foreach ($folder->getFiles() as $file) {
-                    $block = new ParagraphBlock;
-                    $text = Text::fromContent($file);
-                    $paragraphProperty = new ParagraphProperty;
-                    $paragraphProperty->setRichText([$text]);
-                    $block->setParagraph($paragraphProperty);
-                    $blocks[] = $block;
+                    $link = new LinkToPageBlock;
+                    $linkProperty = new LinkToPageProperty;
+                    $linkProperty->setPageId($file->notionID);
+                    $link->setLinkToPage($linkProperty);
+                    $blocks[] = $link;
                 }
 
                 // Level 2 folders
@@ -208,12 +201,11 @@ class UpdateNotionHomeJob implements ShouldQueue
 
                     // Level 2 files
                     foreach ($secondLevelFolder->getFiles() as $file) {
-                        $block = new ParagraphBlock;
-                        $text = Text::fromContent($file);
-                        $paragraphProperty = new ParagraphProperty;
-                        $paragraphProperty->setRichText([$text]);
-                        $block->setParagraph($paragraphProperty);
-                        $blocks[] = $block;
+                        $link = new LinkToPageBlock;
+                        $linkProperty = new LinkToPageProperty;
+                        $linkProperty->setPageId($file->notionID);
+                        $link->setLinkToPage($linkProperty);
+                        $blocks[] = $link;
                     }
                 }
             }
