@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('content');
             $table->string('notion_id')->nullable();
             $table->string('notion_url')->nullable();
+            $table->string('hash');
             $table->foreignId('source_id');
             $table->timestamps();
         });

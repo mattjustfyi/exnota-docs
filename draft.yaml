@@ -30,6 +30,7 @@ models:
     content: text
     notion_id: string nullable
     notion_url: string nullable
+    hash: string
     relationships:
       belongsTo: Source
 

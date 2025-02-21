@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Models\Document;
+use App\Models\NotionDatabase;
 use App\Models\NotionWorkspace;
 use App\Models\Repository;
+use App\Models\Source;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Webmozart\Assert\Assert;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -32,35 +35,39 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test Workspace',
             'token' => config('services.notion.token'),
         ]);
+        Assert::isInstanceOf($workspace, NotionWorkspace::class);
 
         $database = $workspace->notionDatabases()->create([
             'name' => 'Test Database',
             'notion_id' => config('services.notion.test_database_id'),
             'notion_home_id' => config('services.notion.test_home_id'),
         ]);
+        Assert::isInstanceOf($database, NotionDatabase::class);
 
         $repository = Repository::factory()->create([
             'url' => 'https://api.github.com/repos/mttschltz/exnota-docs/contents',
             'token' => config('services.github.token'),
         ]);
+        Assert::isInstanceOf($repository, Repository::class);
 
         // Source: OneLevel test data
         $source = $repository->sources()->create([
             'path' => '/tests/Data/Docs/OneLevel',
             'notion_database_id' => $database->id,
         ]);
+        Assert::isInstanceOf($source, Source::class);
 
         $paths = $this->localFilePaths('tests/Data/Docs/OneLevel');
 
         foreach ($paths as $path) {
-            // Paths from Github come without a forward slash, so remove to
+            // Paths from GitHub come without a forward slash, so remove to
             // normalize
             $pathWithoutFirstSlash = preg_replace('/^\//', '', $path['relative']);
             Document::factory()
                 ->contentfromfile($path['absolute'])
                 ->create([
                     'source_id' => $source->id,
-                    // Prepend `/` to match the format from Github
+                    // Prepend `/` to match the format from GitHub
                     'path' => $pathWithoutFirstSlash,
                 ]);
         }
@@ -70,11 +77,12 @@ class DatabaseSeeder extends Seeder
             'path' => '/tests/Data/Docs/ThreeLevel',
             'notion_database_id' => $database->id,
         ]);
+        Assert::isInstanceOf($source, Source::class);
 
         $paths = $this->localFilePaths('tests/Data/Docs/ThreeLevel');
 
         foreach ($paths as $path) {
-            // Paths from Github come without a forward slash, so remove to
+            // Paths from GitHub come without a forward slash, so remove to
             // normalize
             $pathWithoutFirstSlash = preg_replace('/^\//', '', $path['relative']);
             Document::factory()

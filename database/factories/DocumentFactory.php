@@ -7,6 +7,7 @@ namespace Database\Factories;
 use App\Models\Document;
 use App\Models\Source;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Webmozart\Assert\Assert;
 
 /** @extends Factory<Document> */
 class DocumentFactory extends Factory
@@ -124,6 +125,7 @@ EOD;
             'path' => fake()->filePath(),
             'content' => $content,
             'source_id' => Source::factory(),
+            'hash' => hash('sha256', $content),
             // Use notionData() state manipulator to add Notion data. When documents are
             // initially created, they don't have this data.
         ];
@@ -135,10 +137,12 @@ EOD;
     public function contentFromFile(string $path): Factory
     {
         $content = file_get_contents($path);
+        Assert::string($content);
 
         return $this->state(function (array $attributes) use ($content) {
             return [
                 'content' => $content,
+                'hash' => hash('sha256', $content),
             ];
         });
     }
