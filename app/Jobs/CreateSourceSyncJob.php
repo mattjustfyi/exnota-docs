@@ -152,14 +152,43 @@ class CreateSourceSyncJob implements ShouldQueue
             throw new NoDocumentsException($sourceSync->id);
         }
 
-        $createPageJobs = array_map(function ($document_id) use ($sourceSync) {
+        $jobs = array_map(function ($document_id) use ($sourceSync) {
             /** @var Document $document */
             $document = Document::findOrFail($document_id);
+            $sourceId = $sourceSync->source_id;
+
+            // Create an update job if document already synced to Notion
+            $previousDocument = Document::where('source_id', $sourceId)
+                ->where('path', $document->path)
+                ->whereNot('id', $document->id)
+                ->orderBy('created_at', 'desc')->first();
+            if ($previousDocument !== null && $previousDocument->notion_id != null) {
+                $document->update([
+                    'notion_id' => $previousDocument->notion_id,
+                    'notion_url' => $previousDocument->notion_url,
+                ]);
+
+                Log::info('Creating an update page job for document', [
+                    'document_id' => $document->id,
+                    'source_id' => $sourceId,
+                    'source_sync_id' => $sourceSync->id,
+                    'notion_id' => $document->notion_id,
+                ]);
+
+                return new UpdatePageJob($sourceSync, $document);
+            }
+
+            // Create a create job if first time syncing
+            Log::info('Creating a create page job for document', [
+                'document_id' => $document->id,
+                'source_id' => $sourceId,
+                'source_sync_id' => $sourceSync->id,
+            ]);
 
             return new CreatePageJob($sourceSync, $document);
         }, $documentIds);
 
-        $pendingBatch = Bus::batch($createPageJobs)->before(function () {
+        $pendingBatch = Bus::batch($jobs)->before(function () {
             Log::info('CreatePageJob batch started');
         })->progress(function () {
             Log::info('CreatePageJob batch progress');

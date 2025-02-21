@@ -60,11 +60,10 @@ class SaveFileJob implements ShouldQueue
 
         $json = $response->json();
         $downloadUrl = $json['download_url'];
-        Log::info('file contents:'.$downloadUrl);
+        Log::info('download url:'.$downloadUrl);
 
         // Download file
         $content = file_get_contents($downloadUrl);
-        Log::info('file contents:'.$content);
 
         // Save to document and update source sync
         $document = DB::transaction(function () use ($source, $content) {
@@ -83,6 +82,10 @@ class SaveFileJob implements ShouldQueue
             return $doc;
         });
 
-        Log::info('Document created', ['document' => $document]);
+        Log::info('Document created', [
+            'id' => $document->id,
+            'source_id' => $document->source_id,
+            'path' => $document->path,
+        ]);
     }
 }

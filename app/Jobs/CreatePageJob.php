@@ -61,15 +61,17 @@ class CreatePageJob implements ShouldQueue
             return;
         }
 
-        $filePath = $this->document->path;
-
+        // Apply fixes to content
         $linkUpdater = new LinkUpdater($this->document->content);
         $content = $linkUpdater->update();
 
         $tableFixer = new TableFixer($content);
         $content = $tableFixer->fix();
 
-        $cmd = config('app.debug_node')
+        // Append new content
+        $filePath = $this->document->path;
+        $debugNode = config('app.debug_node');
+        $cmd = $debugNode
             ? 'node --inspect-brk cmd/notion-export/create.js'
             : 'node cmd/notion-export/create.js';
         $payload = json_encode([
@@ -85,6 +87,7 @@ class CreatePageJob implements ShouldQueue
 
         $process = Process::fromShellCommandline($cmd);
         $process->setInput($payload);
+        $process->setTimeout($debugNode ? 600 : 120);
         $process->run(function ($type, $data) {
             if ($type === Process::ERR) {
                 if (! is_string($data) || (

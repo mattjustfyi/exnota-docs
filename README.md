@@ -1,26 +1,29 @@
 <!-- TOC -->
-
 * [Exnota Docs](#exnota-docs)
-    * [Useful commands](#useful-commands)
-    * [Bugs](#bugs)
-    * [Testing](#testing)
-        * [Full sync](#full-sync)
-        * [Create page: create.js only](#create-page-createjs-only)
-        * [Create page: Single job](#create-page-single-job)
-        * [Create page: All jobs](#create-page-all-jobs)
-        * [Home update](#home-update)
-    * [PhpStorm](#phpstorm)
-        * [Debugging node.js scripts](#debugging-nodejs-scripts)
-            * [Directly](#directly)
-            * [Called from PHP](#called-from-php)
-        * [When listening for debug connections](#when-listening-for-debug-connections)
-    * [PHPStan/Larastan](#phpstanlarastan)
-        * [Factories](#factories)
-        * [Eloquent/model relationships](#eloquentmodel-relationships)
-        * [Queries](#queries)
-    * [Troubleshooting](#troubleshooting)
-        * [Property hooks and debugging](#property-hooks-and-debugging)
-
+  * [Useful commands](#useful-commands)
+  * [Bugs](#bugs)
+  * [Testing](#testing)
+    * [Full sync](#full-sync)
+    * [Creating a page](#creating-a-page-)
+      * [create.js only (no job)](#createjs-only-no-job)
+      * [Single job](#single-job)
+      * [All jobs for sync](#all-jobs-for-sync)
+    * [Updating a page](#updating-a-page)
+      * [update.js only (no job)](#updatejs-only-no-job)
+      * [Single job](#single-job-1)
+      * [All jobs for sync](#all-jobs-for-sync-1)
+    * [Home update](#home-update)
+  * [PhpStorm](#phpstorm)
+    * [Debugging node.js scripts](#debugging-nodejs-scripts)
+      * [Directly](#directly)
+      * [Called from PHP](#called-from-php)
+    * [When listening for debug connections](#when-listening-for-debug-connections)
+  * [PHPStan/Larastan](#phpstanlarastan)
+    * [Factories](#factories)
+    * [Eloquent/model relationships](#eloquentmodel-relationships)
+    * [Queries](#queries)
+  * [Troubleshooting](#troubleshooting)
+    * [Property hooks and debugging](#property-hooks-and-debugging)
 <!-- TOC -->
 
 # Exnota Docs
@@ -81,7 +84,9 @@ $source = App\Models\Source::find(1)
 App\Jobs\CreateSourceSyncJob::dispatch($source);1;
 ```
 
-### Create page: create.js only
+### Creating a page 
+
+#### create.js only (no job)
 
 Note: This will skip some cleanup, such as internal link removal as done by LinkUpdater.php. This could be done manually
 using regexs from the class.
@@ -97,7 +102,7 @@ using regexs from the class.
   node --inspect-brk create.js <<< '{"token": "<token>", "databaseId": "<notion database id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
   ```
 
-### Create page: Single job
+#### Single job
 
 Existing document:
 
@@ -125,10 +130,60 @@ $doc = Document::factory() \
  App\Jobs\CreatePageJob::dispatch($sourceSync, $doc);1; 
 ```
 
-### Create page: All jobs
+#### All jobs for sync
 
 ```bash
 pat --execute="include('tests/Manual/CreatePageTest.php')"
+```
+
+### Updating a page
+
+#### update.js only (no job)
+
+Note: This will skip some cleanup, such as internal link removal as done by LinkUpdater.php. This could be done manually
+using regexs from the class.
+
+* From database: Construct JSON from database and send to update.js
+    Note: I haven't added this yet. See [Creating a Page](#creating-a-page-) for an example.
+
+* From file
+  ```bash
+  cd cmd/notion-export
+  node --inspect-brk update.js <<< '{"token": "<token>", "pageID": "<notion page id>", "contentPath": "/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/about/Values.md", "filePath":"/Users/matt/code/exnota-docs/tests/Data/Docs/OneLevel/releases/Release-process.md"}'
+  ```
+
+#### Single job
+
+Existing document:
+
+```php
+$source = Source::find(1);
+// Currently SourceSync isn't used much by UpdatePageJob
+$sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
+
+$doc = Document::find(55); 
+
+App\Jobs\UpdatePageJob::dispatch($sourceSync, $doc);1; 
+```
+
+New document from file:
+
+```php
+$source = Source::find(1);
+// Currently SourceSync isn't used much by UpdatePageJob
+$sourceSync = SourceSync::factory()->create(['source_id' => $source->id]);
+
+$doc = Document::factory() \
+	->contentFromFile('/Users/matt/code/exnota-docs/tests/Data/Docs/ThreeLevel/contributing/testing/Flutter-Test-Fonts.md') \
+	->create(['source_id' => $source->id]);
+
+ App\Jobs\UpdatePageJob::dispatch($sourceSync, $doc);1; 
+```
+
+#### All jobs for sync
+
+```bash
+pat --execute="include('tests/Manual/UpdatePageTest.php')"
 ```
 
 ### Home update

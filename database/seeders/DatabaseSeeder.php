@@ -53,11 +53,15 @@ class DatabaseSeeder extends Seeder
         $paths = $this->localFilePaths('tests/Data/Docs/OneLevel');
 
         foreach ($paths as $path) {
+            // Paths from Github come without a forward slash, so remove to
+            // normalize
+            $pathWithoutFirstSlash = preg_replace('/^\//', '', $path['relative']);
             Document::factory()
                 ->contentfromfile($path['absolute'])
                 ->create([
                     'source_id' => $source->id,
-                    'path' => $path['relative'],
+                    // Prepend `/` to match the format from Github
+                    'path' => $pathWithoutFirstSlash,
                 ]);
         }
 
@@ -70,11 +74,14 @@ class DatabaseSeeder extends Seeder
         $paths = $this->localFilePaths('tests/Data/Docs/ThreeLevel');
 
         foreach ($paths as $path) {
+            // Paths from Github come without a forward slash, so remove to
+            // normalize
+            $pathWithoutFirstSlash = preg_replace('/^\//', '', $path['relative']);
             Document::factory()
                 ->contentfromfile($path['absolute'])
                 ->create([
                     'source_id' => $source->id,
-                    'path' => $path['relative'],
+                    'path' => $pathWithoutFirstSlash,
                 ]);
         }
 

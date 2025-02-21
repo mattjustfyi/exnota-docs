@@ -65,10 +65,10 @@ try {
                 console.log('h1Indexes', h1Indexes);
                 let titleRichText;
                 if (h1Indexes.length === 1 && h1Indexes[0] <= 1) {
-                    console.log('Found h1');
+                    console.log('Found a single h1 at top of file');
                     titleRichText = blocks.splice(h1Indexes[0], 1)[0].heading_1.rich_text;
                 } else {
-                    console.log('No h1 found, using file path to extract title:' + filePath);
+                    console.log('Found no h1 at top of file, or additional h1\'s throughout document: ' + filePath);
                     const titleText = filePath.split('/').pop().replace(/\.[^/.]+$/, "");
                     titleRichText = [
                         {
