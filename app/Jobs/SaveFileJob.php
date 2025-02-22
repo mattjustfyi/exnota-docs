@@ -13,25 +13,19 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
+use Webmozart\Assert\Assert;
 
 class SaveFileJob implements ShouldQueue
 {
     use Batchable, Queueable;
 
-    private SourceSync $sourceSync;
-
-    private string $filePath;
-
-    public function __construct(SourceSync $sourceSync, string $filePath)
-    {
-        $this->sourceSync = $sourceSync;
-        $this->filePath = $filePath;
-    }
+    public function __construct(private readonly SourceSync $sourceSync, private readonly string $filePath, private readonly string $fileSHA) {}
 
     /**
      * Execute the job.
      *
-     * @throws ConnectionException
+     * @throws ConnectionException|Throwable
      */
     public function handle(): void
     {
@@ -43,8 +37,11 @@ class SaveFileJob implements ShouldQueue
 
         // Get file download link
         $source = $this->sourceSync->source;
-        $githubToken = $source->repository->token; // Replace this with your actual GitHub token
-        $path = $source->repository->url.'/'.$this->filePath;
+        Assert::notNull($source);
+        $repository = $source->repository;
+        Assert::notNull($repository);
+        $githubToken = $repository->token; // Replace this with your actual GitHub token
+        $path = $repository->url.'/'.$this->filePath;
         $response = Http::withHeaders([
             'Accept' => 'application/vnd.github+json',
             'Authorization' => 'Bearer '.$githubToken,
@@ -59,17 +56,21 @@ class SaveFileJob implements ShouldQueue
         }
 
         $json = $response->json();
+        Assert::isArray($json);
         $downloadUrl = $json['download_url'];
+        Assert::string($downloadUrl);
         Log::info('download url:'.$downloadUrl);
 
         // Download file
         $content = file_get_contents($downloadUrl);
+        Assert::string($content);
 
         // Save to document and update source sync
         $document = DB::transaction(function () use ($source, $content) {
             $doc = Document::create([
                 'path' => $this->filePath,
                 'content' => $content,
+                'hash' => $this->fileSHA,
                 'source_id' => $source->id,
             ]);
 

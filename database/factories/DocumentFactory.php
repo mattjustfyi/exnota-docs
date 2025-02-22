@@ -7,6 +7,7 @@ namespace Database\Factories;
 use App\Models\Document;
 use App\Models\Source;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Utils\HashCreator;
 use Webmozart\Assert\Assert;
 
 /** @extends Factory<Document> */
@@ -120,12 +121,14 @@ _See also:_
 * [Flutter's Culture of Inclusivity](https://flutter.dev/culture)
 * [Flutter culture and how to preserve it](https://medium.com/flutter/flutter-culture-and-how-to-preserve-it-436b4ed1031d)
 EOD;
+        $path = fake()->filePath();
+        Assert::string($path);
 
         return [
-            'path' => fake()->filePath(),
+            'path' => $path,
             'content' => $content,
             'source_id' => Source::factory(),
-            'hash' => hash('sha256', $content),
+            'hash' => HashCreator::create(content: $content, path: $path),
             // Use notionData() state manipulator to add Notion data. When documents are
             // initially created, they don't have this data.
         ];
@@ -139,10 +142,10 @@ EOD;
         $content = file_get_contents($path);
         Assert::string($content);
 
-        return $this->state(function (array $attributes) use ($content) {
+        return $this->state(function () use ($content, $path) {
             return [
                 'content' => $content,
-                'hash' => hash('sha256', $content),
+                'hash' => HashCreator::create(content: $content, path: $path),
             ];
         });
     }
@@ -152,7 +155,7 @@ EOD;
      */
     public function notionData(): Factory
     {
-        return $this->state(function (array $attributes) {
+        return $this->state(function () {
             return [
                 'notion_id' => $this->faker->uuid(),
                 'notion_url' => $this->faker->url(),

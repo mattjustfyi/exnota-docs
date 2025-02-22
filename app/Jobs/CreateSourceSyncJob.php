@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 class CreateSourceSyncJob implements ShouldQueue
 {
@@ -45,22 +46,39 @@ class CreateSourceSyncJob implements ShouldQueue
         /** @var Repository $repository */
         $repository = $source->repository;
         try {
-            $filePaths = $this->getFilesInDir($repository->url, $source->path, 2);
+            $allRemoteDocuments = $this->getFilesInDir($repository->url, $source->path, 2);
         } catch (GitHubException|ConnectionException) {
             $this->release();
 
             return;
         }
-        Log::info('filePaths', ['filePaths' => $filePaths]);
+        Log::info('Got remote documents', ['remoteDocuments' => $allRemoteDocuments]);
+
+        $changedRemoteDocuments = array_filter(array: $allRemoteDocuments, callback: function ($remoteDocument) use ($source) {
+            $existingDocument = Document::where('path', $remoteDocument->path)
+                ->where('source_id', $source->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            if ($existingDocument === null) {
+                return true;
+            }
+            if ($existingDocument->notion_id === null) {
+                return true;
+            }
+
+            return $existingDocument->hash !== $remoteDocument->hash;
+        });
 
         $this->sourceSync->update([
-            'file_paths' => $filePaths,
+            'file_paths' => array_map(function ($remoteDocument) {
+                return $remoteDocument->path;
+            }, $changedRemoteDocuments),
         ]);
 
         // Create save file job for each path
-        $saveFileJobs = array_map(function ($filePath) {
-            return new SaveFileJob($this->sourceSync, $filePath);
-        }, $filePaths);
+        $saveFileJobs = array_map(function ($remoteDocument) {
+            return new SaveFileJob(sourceSync: $this->sourceSync, filePath: $remoteDocument->path, fileSHA: $remoteDocument->hash);
+        }, $changedRemoteDocuments);
 
         $sourceSync = $this->sourceSync;
         $pendingSaveFileBatch = Bus::batch($saveFileJobs)->before(function () {
@@ -71,7 +89,7 @@ class CreateSourceSyncJob implements ShouldQueue
             Log::info('SaveFileJob batch finished (then)');
             // Can't reference $this as this code is serialized into a job in the database
             // so call a static function.
-            CreateSourceSyncJob::createCreatePageJobs($sourceSync->id);
+            CreateSourceSyncJob::dispatchCreateAndUpdateJobs($sourceSync->id);
         })->catch(function () {
             Log::error('SaveFileJob batch failed');
         })->finally(function () {
@@ -85,19 +103,19 @@ class CreateSourceSyncJob implements ShouldQueue
     }
 
     /**
-     * @param  string[]  $filePaths
-     * @return string[]
+     * @param  RemoteDocument[]  $remoteDocuments
+     * @return RemoteDocument[]
      *
      * @throws ConnectionException
      * @throws GitHubException
      */
-    private function getFilesInDir(string $base, string $dirPath, int $depth, array $filePaths = []): array
+    private function getFilesInDir(string $base, string $dirPath, int $depth, array $remoteDocuments = []): array
     {
         $source = $this->sourceSync->source;
-        $githubToken = $source?->repository?->token; // Replace this with your actual GitHub token
-        if (! is_string($githubToken)) {
-            throw new GitHubException('GitHub token not set');
-        }
+        Assert::isInstanceOf($source, Source::class);
+        $repository = $source->repository;
+        Assert::isInstanceOf($repository, Repository::class);
+        $githubToken = $repository->token; // Replace this with your actual GitHub token
 
         $response = Http::withHeaders([
             'Accept' => 'application/vnd.github+json',
@@ -110,7 +128,7 @@ class CreateSourceSyncJob implements ShouldQueue
             throw new GitHubException($response->reason());
         }
 
-        /** @var array<string, array{type:string, path:string}> $data */
+        /** @var array<string, array{type:string, path:string, sha:string}> $data */
         $data = $response->json();
 
         $subDirPaths = [];
@@ -118,7 +136,7 @@ class CreateSourceSyncJob implements ShouldQueue
             if ($item['type'] === 'dir') {
                 $subDirPaths[] = $item['path'];
             } elseif ($item['type'] === 'file') {
-                $filePaths[] = $item['path'];
+                $remoteDocuments[] = new RemoteDocument(path: $item['path'], hash: $item['sha']);
             } else {
                 Log::error('Unknown item type: '.$item['type']);
                 throw new GitHubException('Unknown item type: '.$item['type']);
@@ -126,21 +144,21 @@ class CreateSourceSyncJob implements ShouldQueue
         }
 
         if ($depth === 0) {
-            return $filePaths;
+            return $remoteDocuments;
         }
 
         foreach ($subDirPaths as $subDirPath) {
-            $filePaths = $this->getFilesInDir($base, '/'.$subDirPath, $depth - 1, $filePaths);
+            $remoteDocuments = $this->getFilesInDir($base, '/'.$subDirPath, $depth - 1, $remoteDocuments);
         }
 
-        return $filePaths;
+        return $remoteDocuments;
     }
 
     /**
      * @throws NoDocumentsException
      * @throws Throwable
      */
-    private static function createCreatePageJobs(int $sourceSyncId): void
+    private static function dispatchCreateAndUpdateJobs(int $sourceSyncId): void
     {
         /** @var SourceSync $sourceSync */
         $sourceSync = SourceSync::findOrFail($sourceSyncId);
