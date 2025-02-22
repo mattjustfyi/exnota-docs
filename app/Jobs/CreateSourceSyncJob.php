@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Document;
+use App\Models\NotionDatabase;
 use App\Models\Repository;
 use App\Models\Source;
 use App\Models\SourceSync;
@@ -89,7 +90,7 @@ class CreateSourceSyncJob implements ShouldQueue
             Log::info('SaveFileJob batch finished (then)');
             // Can't reference $this as this code is serialized into a job in the database
             // so call a static function.
-            CreateSourceSyncJob::dispatchCreateAndUpdateJobs($sourceSync->id);
+            CreateSourceSyncJob::dispatchUpdateNotionJobs($sourceSync->id);
         })->catch(function () {
             Log::error('SaveFileJob batch failed');
         })->finally(function () {
@@ -158,7 +159,7 @@ class CreateSourceSyncJob implements ShouldQueue
      * @throws NoDocumentsException
      * @throws Throwable
      */
-    private static function dispatchCreateAndUpdateJobs(int $sourceSyncId): void
+    private static function dispatchUpdateNotionJobs(int $sourceSyncId): void
     {
         /** @var SourceSync $sourceSync */
         $sourceSync = SourceSync::findOrFail($sourceSyncId);
@@ -206,18 +207,28 @@ class CreateSourceSyncJob implements ShouldQueue
             return new CreatePageJob($sourceSync, $document);
         }, $documentIds);
 
-        $pendingBatch = Bus::batch($jobs)->before(function () {
-            Log::info('CreatePageJob batch started');
+        $updatePagesBatch = Bus::batch($jobs)->before(function () {
+            Log::info('Update Notion Page batch started');
         })->progress(function () {
-            Log::info('CreatePageJob batch progress');
+            Log::info('Update Notion Page batch progress');
         })->then(function () {
-            Log::info('CreatePageJob batch finished (then)');
+            Log::info('Update Notion Page batch finished (then)');
         })->catch(function () {
-            Log::error('CreatePageJob batch failed');
+            Log::error('Update Notion Page batch errored');
         })->finally(function () {
-            Log::info('CreatePageJob batch finished (finally)');
+            Log::info('Update Notion Page batch finished (finally)');
         });
 
-        $pendingBatch->dispatch();
+        $notionDatabase = $sourceSync->source?->notionDatabase;
+        Assert::isInstanceOf($notionDatabase, NotionDatabase::class);
+
+        Bus::chain([
+            $updatePagesBatch,
+            new UpdateNotionHomeJob(sourceSync: $sourceSync, database: $notionDatabase),
+        ])
+            ->catch(function (Throwable $e) {
+                Log::error('Update Notion chain errored', ['exception' => $e]);
+            })
+            ->dispatch();
     }
 }

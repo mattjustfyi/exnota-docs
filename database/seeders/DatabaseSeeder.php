@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
 
         // Source: OneLevel test data
         $source = $repository->sources()->create([
-            'path' => '/tests/Data/Docs/OneLevel',
+            'path' => 'tests/Data/Docs/OneLevel',
             'notion_database_id' => $database->id,
         ]);
         Assert::isInstanceOf($source, Source::class);
@@ -74,7 +74,7 @@ class DatabaseSeeder extends Seeder
 
         // Source: ThreeLevel test data
         $source = $repository->sources()->create([
-            'path' => '/tests/Data/Docs/ThreeLevel',
+            'path' => 'tests/Data/Docs/ThreeLevel',
             'notion_database_id' => $database->id,
         ]);
         Assert::isInstanceOf($source, Source::class);

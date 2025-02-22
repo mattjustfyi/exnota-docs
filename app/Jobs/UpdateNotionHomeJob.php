@@ -57,6 +57,14 @@ class UpdateNotionHomeJob implements ShouldQueue
      */
     public function handle(): void
     {
+        $filePaths = $this->sourceSync->file_paths;
+        Assert::notNull($filePaths);
+        if (count($filePaths) === 0) {
+            Log::info('No file paths updated: Not changing Notion home.');
+
+            return;
+        }
+
         // Get notion details
         $token = $this->database->notionWorkspace?->token;
         if ($token === null) {
@@ -221,17 +229,6 @@ class UpdateNotionHomeJob implements ShouldQueue
             throw $e;
         }
 
-        // TODO:
-        // - (first attempt: just submit names, not links)
-        // - From sourcesync, get documents
-        // - Arrange as a tree
-        //   - Root pages first
-        //   - Then alphabetical first folder
-        //     - And inside that, root pages first
-        //     - Then any subfolders with their pages
-        // (second attempt: links!)
-        // - Save notion page ID to `Document` when syncing
-        // - Update the above to create links
         Log::info('UpdateNotionHomeJob handled');
     }
 }
