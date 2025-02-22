@@ -1,9 +1,5 @@
 # Flutter's core values
 
-## 🐱Always be within 3 metres of a kitten
-
-Good vibes == good code.
-
 ## 🏗️ Build the best way to develop user interfaces.
 
 This tells us what we are creating. It helps narrow our focus.
