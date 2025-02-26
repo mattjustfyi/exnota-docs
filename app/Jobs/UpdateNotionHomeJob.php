@@ -65,6 +65,13 @@ class UpdateNotionHomeJob implements ShouldQueue
             return;
         }
 
+        // Don't update if there are no new pages
+        if (! $this->sourceSync->hasNewDocuments()) {
+            Log::info('No file paths updated: Not changing Notion home.');
+
+            return;
+        }
+
         // Get notion details
         $token = $this->database->notionWorkspace?->token;
         if ($token === null) {
@@ -81,6 +88,7 @@ class UpdateNotionHomeJob implements ShouldQueue
         $notion = new Client($options);
 
         // Find child blocks to delete
+        Log::info('Finding child blocks');
         $blocksToDelete = [];
         try {
             /** @var ?string $nextCursor */
@@ -124,6 +132,7 @@ class UpdateNotionHomeJob implements ShouldQueue
         }
 
         // Delete child blocks
+        Log::info('Deleting child blocks');
         if (count($blocksToDelete) > 0) {
             foreach ($blocksToDelete as $blockID) {
                 try {
@@ -135,12 +144,13 @@ class UpdateNotionHomeJob implements ShouldQueue
         }
 
         // Build folder structure
-        $documents = $this->sourceSync->getDocuments();
         $source = $this->sourceSync->source;
         Assert::notNull($source);
+        $documents = $source->latestDocuments();
         $rootFolder = FolderBuilder::build($documents, $source);
 
         // Add home page blocks
+        Log::info('Updating children');
         try {
             $blocks = [];
 

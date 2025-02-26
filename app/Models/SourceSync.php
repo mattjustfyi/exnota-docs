@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Webmozart\Assert\Assert;
 
 /**
  * @property int[] $document_ids
@@ -40,6 +42,26 @@ class SourceSync extends Model
     public function getDocuments(): Collection
     {
         return Document::whereIn('id', $this->document_ids)->get();
+    }
+
+    public function hasNewDocuments(): bool
+    {
+        // Count the number of documents that have the same path as
+        // the documents being synced.
+        $paths = Document::whereIn('id', $this->document_ids)->pluck('path');
+        $counts = Document::select(DB::raw('count(*) as count'))
+            ->whereIn('path', $paths)
+            ->groupBy('path')
+            ->get()
+            ->pluck('count')
+            ->toArray();
+
+        // Every document should at least match itself in the query.
+        Assert::eq(count($this->document_ids), $paths->count());
+
+        // A new document will only match itself on its path, and thus only
+        // have a count of 1 when grouping on 'path'.
+        return array_any($counts, fn ($count) => $count === 1);
     }
 
     /**
