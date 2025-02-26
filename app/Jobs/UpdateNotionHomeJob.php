@@ -67,7 +67,7 @@ class UpdateNotionHomeJob implements ShouldQueue
 
         // Don't update if there are no new pages
         if (! $this->sourceSync->hasNewDocuments()) {
-            Log::info('No file paths updated: Not changing Notion home.');
+            Log::info('No new documents: Not changing Notion home.');
 
             return;
         }

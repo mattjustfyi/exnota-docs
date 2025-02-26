@@ -51,6 +51,7 @@ class SourceSync extends Model
         $paths = Document::whereIn('id', $this->document_ids)->pluck('path');
         $counts = Document::select(DB::raw('count(*) as count'))
             ->whereIn('path', $paths)
+            ->whereNotNull('notion_id')
             ->groupBy('path')
             ->get()
             ->pluck('count')
