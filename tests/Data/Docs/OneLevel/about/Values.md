@@ -1,6 +1,6 @@
 # Flutter's core values
 
-## 🐱Always be within 3 metres of a kitten
+## 🐱Always be within 2 metres of a kitten
 
 Good vibes == good code.
 
