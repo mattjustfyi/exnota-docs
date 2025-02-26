@@ -98,10 +98,10 @@ class DatabaseSeeder extends Seeder
     /**
      * @return array<int, array{relative: string, absolute: string}>
      */
-    private function localFilePaths(string $path): array
+    private function localFilePaths(string $sourcePath): array
     {
-        $sourcePath = base_path($path);
-        $files = File::allFiles($sourcePath);
+        $absoluteSourcePath = base_path($sourcePath);
+        $files = File::allFiles($absoluteSourcePath);
 
         $projectRelativePath = base_path();
 
@@ -111,6 +111,17 @@ class DatabaseSeeder extends Seeder
             'relative' => str_replace($projectRelativePath, '', $file->getPathname()),
         ], $files);
 
-        return $paths;
+        // Exclude files more than 2 subdirectories deep.
+        return array_filter($paths,
+            callback:
+            /**
+             * @param  array<int, array{absolute: string, relative: string}>  $path
+             */
+            function (array $path) use ($sourcePath) {
+                $relativeFromSource = str_replace('/'.$sourcePath, '', $path['relative']);
+
+                // There is a leading `/` so <= 3 includes paths up to 2 subdirectories deep.
+                return substr_count($relativeFromSource, '/') <= 3;
+            });
     }
 }
