@@ -12,11 +12,13 @@
         "php": "^8.4",
         "brd6/notion-sdk-php": "^1.5",
         "filament/filament": "^3.2",
+        "guzzlehttp/guzzle": "^7.9",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "^3.0",
         "livewire/livewire": "^3.4",
         "livewire/volt": "^1.0",
+        "mariosimao/notion-sdk-php": "^1.14",
         "spatie/laravel-data": "^4.13",
         "spatie/laravel-webhook-client": "^3.4",
         "webmozart/assert": "^1.11"

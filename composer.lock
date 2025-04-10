@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "04a68803594d00e711ae8841aa5e7d36",
+    "content-hash": "09e45a98e2745c2562afa2925c5c5f95",
     "packages": [
         {
             "name": "amphp/amp",
@@ -4479,6 +4479,66 @@
                 "source": "https://github.com/livewire/volt"
             },
             "time": "2024-11-12T14:51:01+00:00"
+        },
+        {
+            "name": "mariosimao/notion-sdk-php",
+            "version": "v1.14.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mariosimao/notion-sdk-php.git",
+                "reference": "0e741ad31c2d7ab4285be9df6f0e60e8c5a8901b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mariosimao/notion-sdk-php/zipball/0e741ad31c2d7ab4285be9df6f0e60e8c5a8901b",
+                "reference": "0e741ad31c2d7ab4285be9df6f0e60e8c5a8901b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "php-http/discovery": "^1.15",
+                "psr/http-client-implementation": "^1.0",
+                "psr/http-factory-implementation": "^1.0",
+                "psr/http-message-implementation": "^1.0"
+            },
+            "require-dev": {
+                "brianium/paratest": "^7.1",
+                "guzzlehttp/guzzle": "^7.5",
+                "infection/infection": "^0.26.19 || ^0.27.0",
+                "phpunit/phpunit": "^10.0",
+                "psalm/plugin-phpunit": "^0.18.4",
+                "squizlabs/php_codesniffer": "^3.7",
+                "vimeo/psalm": "^5.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Notion\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mario Simão",
+                    "email": "mariogsimao@gmail.com"
+                }
+            ],
+            "description": "A complete Notion SDK for PHP developers.",
+            "homepage": "https://mariosimao.github.io/notion-sdk-php",
+            "support": {
+                "issues": "https://github.com/mariosimao/notion-sdk-php/issues",
+                "source": "https://github.com/mariosimao/notion-sdk-php/tree/v1.14.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/mariosimao",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-04-22T15:47:59+00:00"
         },
         {
             "name": "masterminds/html5",
