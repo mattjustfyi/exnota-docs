@@ -19,6 +19,8 @@ use Brd6\NotionSdkPhp\Exception\UnsupportedUserTypeException;
 use Brd6\NotionSdkPhp\Resource\Block\AbstractBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildDatabaseBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
+use Brd6\NotionSdkPhp\Resource\Block\ColumnBlock;
+use Brd6\NotionSdkPhp\Resource\Block\ColumnListBlock;
 use Brd6\NotionSdkPhp\Resource\Block\Heading1Block;
 use Brd6\NotionSdkPhp\Resource\Block\Heading2Block;
 use Brd6\NotionSdkPhp\Resource\Block\Heading3Block;
@@ -39,18 +41,14 @@ class UpdateNotionHomeJob implements ShouldQueue
 {
     use Queueable;
 
-    private NotionDatabase $database;
-
-    private SourceSync $sourceSync;
-
     /**
      * Create a new job instance.
      */
-    public function __construct(SourceSync $sourceSync, NotionDatabase $database)
-    {
-        $this->sourceSync = $sourceSync;
-        $this->database = $database;
-    }
+    public function __construct(
+        private readonly SourceSync $sourceSync,
+        private readonly NotionDatabase $database,
+        private readonly bool $forceUpdate = false
+    ) {}
 
     /**
      * Execute the job.
@@ -59,14 +57,14 @@ class UpdateNotionHomeJob implements ShouldQueue
     {
         $filePaths = $this->sourceSync->file_paths;
         Assert::notNull($filePaths);
-        if (count($filePaths) === 0) {
+        if (! $this->forceUpdate && count($filePaths) === 0) {
             Log::info('No file paths updated: Not changing Notion home.');
 
             return;
         }
 
         // Don't update if there are no new pages
-        if (! $this->sourceSync->hasNewDocuments()) {
+        if (! $this->forceUpdate && ! $this->sourceSync->hasNewDocuments()) {
             Log::info('No new documents: Not changing Notion home.');
 
             return;
@@ -89,12 +87,12 @@ class UpdateNotionHomeJob implements ShouldQueue
 
         // Find child blocks to delete
         Log::info('Finding child blocks');
-        $blocksToDelete = [];
+        /** @var array<string> $rootChildrenToDelete */
+        $rootChildrenToDelete = [];
         try {
             /** @var ?string $nextCursor */
             $nextCursor = null;
             $databaseFound = false;
-            /** @var array<string> $blocksToDelete */
             do {
                 // Request children and set new cursor, if there are more
                 $request = new PaginationRequest;
@@ -121,7 +119,7 @@ class UpdateNotionHomeJob implements ShouldQueue
                     // Delete if not a database or page
                     if ($databaseFound && (! ($child instanceof ChildPageBlock)) && (! ($child instanceof ChildDatabaseBlock))) {
                         $id = $child->getId();
-                        $blocksToDelete[] = $id;
+                        $rootChildrenToDelete[] = $id;
                     }
                 }
             } while ($homePageContent->isHasMore());
@@ -133,8 +131,8 @@ class UpdateNotionHomeJob implements ShouldQueue
 
         // Delete child blocks
         Log::info('Deleting child blocks');
-        if (count($blocksToDelete) > 0) {
-            foreach ($blocksToDelete as $blockID) {
+        if (count($rootChildrenToDelete) > 0) {
+            foreach ($rootChildrenToDelete as $blockID) {
                 try {
                     $notion->blocks()->delete($blockID);
                 } catch (ApiResponseException|HttpResponseException|InvalidResourceException|InvalidResourceTypeException|RequestTimeoutException|UnsupportedUserTypeException|Exception $e) {
@@ -150,9 +148,9 @@ class UpdateNotionHomeJob implements ShouldQueue
         $rootFolder = FolderBuilder::build($documents, $source);
 
         // Add home page blocks
-        Log::info('Updating children');
+        Log::info('Creating new child blocks');
         try {
-            $blocks = [];
+            $newRootChildren = [];
 
             // Spacing
             $emptyParagraph = new ParagraphBlock;
@@ -160,76 +158,103 @@ class UpdateNotionHomeJob implements ShouldQueue
             $paragraphProperty = new ParagraphProperty;
             $paragraphProperty->setRichText([$text]);
             $emptyParagraph->setParagraph($paragraphProperty);
-            $blocks[] = $emptyParagraph;
+            $newRootChildren[] = $emptyParagraph;
 
             $h1 = new Heading1Block;
             $text = Text::fromContent('📚 Documentation');
             $headingProperty = new HeadingProperty;
             $headingProperty->setRichText([$text]);
             $h1->setHeading1($headingProperty);
-            $blocks[] = $h1;
+            $newRootChildren[] = $h1;
 
-            // Root level
-            $rootH2 = new Heading2Block;
-            // [h2] added temporarily to aid testing; it's hard to distinguish in Notion
-            $text = Text::fromContent('[h2] '.$rootFolder->name);
-            $headingProperty = new HeadingProperty;
-            $headingProperty->setRichText([$text]);
-            $rootH2->setHeading2($headingProperty);
-            $blocks[] = $rootH2;
-
+            //            // Root level
+            //            //            $rootH2 = new Heading2Block;
+            //            // [h2] added temporarily to aid testing; it's hard to distinguish in Notion
+            //            //            $text = Text::fromContent('[h2] '.$rootFolder->name);
+            //            //            $headingProperty = new HeadingProperty;
+            //            //            $headingProperty->setRichText([$text]);
+            //            //            $rootH2->setHeading2($headingProperty);
+            //            //            $blocks[] = $rootH2;
+            //
             foreach ($rootFolder->getFiles() as $file) {
                 $link = new LinkToPageBlock;
                 $linkProperty = new LinkToPageProperty;
                 $linkProperty->setPageId($file->notionID);
                 $link->setLinkToPage($linkProperty);
-                $blocks[] = $link;
+                $newRootChildren[] = $link;
             }
-
-            // Level 1 folders
-            $firstLevelFolders = $rootFolder->getFolders();
-            foreach ($firstLevelFolders as $folder) {
-                // Level 1 name
-                $heading = new Heading2Block;
-                $text = Text::fromContent('[h2] '.$folder->name);
-                $headingProperty = new HeadingProperty;
-                $headingProperty->setRichText([$text]);
-                $heading->setHeading2($headingProperty);
-                $blocks[] = $heading;
-
-                // Level 1 files
-                foreach ($folder->getFiles() as $file) {
-                    $link = new LinkToPageBlock;
-                    $linkProperty = new LinkToPageProperty;
-                    $linkProperty->setPageId($file->notionID);
-                    $link->setLinkToPage($linkProperty);
-                    $blocks[] = $link;
-                }
-
-                // Level 2 folders
-                $secondLevelFolders = $folder->getFolders();
-                foreach ($secondLevelFolders as $secondLevelFolder) {
-                    // Level 2 name
-                    $heading = new Heading3Block;
-                    $text = Text::fromContent('[h3] '.$secondLevelFolder->name);
-                    $headingProperty = new HeadingProperty;
-                    $headingProperty->setRichText([$text]);
-                    $heading->setHeading3($headingProperty);
-                    $blocks[] = $heading;
-
-                    // Level 2 files
-                    foreach ($secondLevelFolder->getFiles() as $file) {
-                        $link = new LinkToPageBlock;
-                        $linkProperty = new LinkToPageProperty;
-                        $linkProperty->setPageId($file->notionID);
-                        $link->setLinkToPage($linkProperty);
-                        $blocks[] = $link;
-                    }
-                }
-            }
+            //
+            //            // Column lists
+            //            $firstLevelFolders = $rootFolder->getFolders();
+            //            for ($i = 0; $i < count($firstLevelFolders); $i += 2) {
+            //                // Create columns
+            //                /** @var ColumnBlock[] $columns */
+            //                $columns = [];
+            //
+            //                // Get left and right folders for columns
+            //                $folderLeft = $firstLevelFolders[$i];
+            //                $folderRight = $i + 1 < count($firstLevelFolders) ? $firstLevelFolders[$i + 1] : null;
+            //                // array_filter should remove falsey values.
+            //                $columnFolders = array_filter([$folderLeft, $folderRight]);
+            //
+            //                // Columns
+            //                foreach ($columnFolders as $folder) {
+            //                    // Create column children
+            //                    /** @var array<int, AbstractBlock> $columnChildren */
+            //                    $columnChildren = [];
+            //
+            //                    // Level 1 name
+            //                    $heading = new Heading2Block;
+            //                    $text = Text::fromContent('[h2] '.$folder->name);
+            //                    $headingProperty = new HeadingProperty;
+            //                    $headingProperty->setRichText([$text]);
+            //                    $heading->setHeading2($headingProperty);
+            //                    $columnChildren[] = $heading;
+            //
+            //                    // Level 1 files
+            //                    foreach ($folder->getFiles() as $file) {
+            //                        $link = new LinkToPageBlock;
+            //                        $linkProperty = new LinkToPageProperty;
+            //                        $linkProperty->setPageId($file->notionID);
+            //                        $link->setLinkToPage($linkProperty);
+            //                        $columnChildren[] = $link;
+            //                    }
+            //
+            //                    // Level 2 folders
+            //                    $secondLevelFolders = $folder->getFolders();
+            //                    foreach ($secondLevelFolders as $secondLevelFolder) {
+            //                        // Level 2 name
+            //                        $heading = new Heading3Block;
+            //                        $text = Text::fromContent('[h3] '.$secondLevelFolder->name);
+            //                        $headingProperty = new HeadingProperty;
+            //                        $headingProperty->setRichText([$text]);
+            //                        $heading->setHeading3($headingProperty);
+            //                        $columnChildren[] = $heading;
+            //
+            //                        // Level 2 files
+            //                        foreach ($secondLevelFolder->getFiles() as $file) {
+            //                            $link = new LinkToPageBlock;
+            //                            $linkProperty = new LinkToPageProperty;
+            //                            $linkProperty->setPageId($file->notionID);
+            //                            $link->setLinkToPage($linkProperty);
+            //                            $columnChildren[] = $link;
+            //                        }
+            //                    }
+            //
+            //                    // Add children to column, and column to list
+            //                    $column = new ColumnBlock;
+            //                    $column->setChildren($columnChildren);
+            //                    $columns[] = $column;
+            //                }
+            //
+            //                // Add columns to list, and list to root
+            //                $columnList = new ColumnListBlock;
+            //                $columnList->setChildren($columns);
+            //                $newRootChildren[] = $columnList;
+            //            }
 
             // Notion has a 100 limit for the number of blocks appended at once
-            $blockChunks = array_chunk($blocks, 100);
+            $blockChunks = array_chunk($newRootChildren, 100);
             foreach ($blockChunks as $blockChunk) {
                 $notion->blocks()->children()->append($homePageId, $blockChunk);
             }
