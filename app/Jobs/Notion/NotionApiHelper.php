@@ -25,46 +25,58 @@ class NotionApiHelper
     protected $apiToken;
 
     /**
+     * Notion page ID
+     */
+    protected $pageId;
+
+    /**
+     * Pending paragraphs to be appended
+     */
+    protected $pendingParagraphs = [];
+
+    /**
      * Constructor
      *
+     * @param  string  $pageId  Notion page ID
      * @param  string  $apiToken  Notion API token
      */
-    public function __construct($apiToken = null)
+    public function __construct($pageId, $apiToken = null)
     {
+        $this->pageId = $pageId;
         $this->apiToken = $apiToken ?? config('services.notion.api_token');
     }
 
     /**
-     * Append a paragraph block with text to a Notion page
+     * Legacy method for backwards compatibility
      *
-     * @param  string  $pageId  The ID of the page to append blocks to
+     * @param  string  $pageId  The ID of the page to append blocks to (ignored, uses constructor value)
      * @param  string  $text  The text content for the paragraph block
      * @return Response
      */
-    public function appendParagraphBlock($pageId, $text = 'test')
+    public function appendParagraphBlock($pageId = null, $text = 'test')
     {
-        $endpoint = "{$this->baseUrl}/blocks/{$pageId}/children";
+        // Ignore the pageId parameter and use the one from constructor
+        return $this->appendParagraph($text)->submit();
+    }
+
+    /**
+     * Submit the pending paragraphs to the Notion API
+     *
+     * @return Response
+     */
+    public function submit()
+    {
+        $endpoint = "{$this->baseUrl}/blocks/{$this->pageId}/children";
 
         $payload = [
-            'children' => [
-                [
-                    'object' => 'block',
-                    'type' => 'paragraph',
-                    'paragraph' => [
-                        'rich_text' => [
-                            [
-                                'type' => 'text',
-                                'text' => [
-                                    'content' => $text,
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
+            'children' => $this->pendingParagraphs,
         ];
 
-        return $this->makeRequest('PATCH', $endpoint, $payload);
+        // Clear the pending paragraphs after submitting
+        $response = $this->makeRequest('PATCH', $endpoint, $payload);
+        $this->pendingParagraphs = [];
+
+        return $response;
     }
 
     /**
@@ -82,5 +94,33 @@ class NotionApiHelper
             'Content-Type' => 'application/json',
             'Notion-Version' => $this->notionVersion,
         ])->$method($endpoint, $payload);
+    }
+
+    /**
+     * Add a paragraph to the pending list
+     *
+     * @param  string  $text  The text content for the paragraph block
+     * @return $this
+     */
+    public function appendParagraph($text)
+    {
+        $paragraph = [
+            'object' => 'block',
+            'type' => 'paragraph',
+            'paragraph' => [
+                'rich_text' => [
+                    [
+                        'type' => 'text',
+                        'text' => [
+                            'content' => $text,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->pendingParagraphs[] = $paragraph;
+
+        return $this;
     }
 }

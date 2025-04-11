@@ -151,18 +151,38 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Add home page blocks
         Log::info('Creating new child blocks');
         try {
-            $newRootChildren = [];
+            // TODO: 'LinkToPage' not supported by marioNotion -_-
+            // Attempt 1: Create my own LinkToPage class
+            // - first just copy the bookmark class and try using that
+            // - then rename it and ensure it works
+            // - then modify to be link_to_page and see if that works.
+            //
+            // If not, maybe just do this request as a direct http request and
+            // get AI to write it.
 
-            // TODO: Create a $marioNotion client and refactor below to use that
-            // because it supports columns
-            $marioNotion = Notion::create($token);
+            // In a controller or command
+            $notionHelper = new NotionApiHelper($homePageId, $token);
 
-            // Spacing
-            $emptyParagraph = Paragraph::fromString(' ');
-            $newRootChildren[] = $emptyParagraph;
+            // Add multiple paragraphs
+            $notionHelper->appendParagraph('First paragraph')
+                ->appendParagraph('Second paragraph')
+                ->appendParagraph('Third paragraph');
 
-            $h1 = Heading1::fromString('📚 Documentation');
-            $newRootChildren[] = $h1;
+            // Submit all paragraphs in one request
+            $notionHelper->submit();
+
+            //            $newRootChildren = [];
+            //
+            //            // TODO: Create a $marioNotion client and refactor below to use that
+            //            // because it supports columns
+            //            $marioNotion = Notion::create($token);
+            //
+            //            // Spacing
+            //            $emptyParagraph = Paragraph::fromString(' ');
+            //            $newRootChildren[] = $emptyParagraph;
+            //
+            //            $h1 = Heading1::fromString('📚 Documentation');
+            //            $newRootChildren[] = $h1;
 
             // Root level
             //            $rootH2 = new Heading2Block;
@@ -173,42 +193,32 @@ class UpdateNotionHomeJob implements ShouldQueue
             //            $rootH2->setHeading2($headingProperty);
             //            $blocks[] = $rootH2;
 
-            foreach ($rootFolder->getFiles() as $file) {
-                // TODO: 'LinkToPage' not supported by marioNotion -_-
-                // Attempt 1: Create my own LinkToPage class
-                // - first just copy the bookmark class and try using that
-                // - then rename it and ensure it works
-                // - then modify to be link_to_page and see if that works.
-                //
-                // If not, maybe just do this request as a direct http request and
-                // get AI to write it.
+            //            foreach ($rootFolder->getFiles() as $file) {
 
-                // In a controller or command
-                $notionHelper = new NotionApiHelper($token);
-                $response = $notionHelper->appendParagraphBlock($homePageId);
+            //                $response = $notionHelper->appendParagraphBlock($homePageId);
+            //
+            //                // To add custom text
+            //                $response = $notionHelper->appendParagraphBlock($homePageId, 'Your custom paragraph text here');
 
-                // To add custom text
-                $response = $notionHelper->appendParagraphBlock($homePageId, 'Your custom paragraph text here');
+            // Check the response
+            //                if ($response->successful()) {
+            //                    // Block was added successfully
+            //                    Log::info('Paragraph created');
+            //                } else {
+            //                    // Handle error
+            //                    $error = $response->json();
+            //                    Log::error('Paragraph created', ['error' => $error]);
+            //                }
 
-                // Check the response
-                if ($response->successful()) {
-                    // Block was added successfully
-                    Log::info('Paragraph created');
-                } else {
-                    // Handle error
-                    $error = $response->json();
-                    Log::error('Paragraph created', ['error' => $error]);
-                }
+            //                $linkToPage = LinkToPage::fromPageId('1a6944fb-b2bc-81ec-93af-d178b3cab8d9');
+            //                $newRootChildren[] = $linkToPage;
 
-                //                $linkToPage = LinkToPage::fromPageId('1a6944fb-b2bc-81ec-93af-d178b3cab8d9');
-                //                $newRootChildren[] = $linkToPage;
-
-                //                $link = new LinkToPageBlock;
-                //                $linkProperty = new LinkToPageProperty;
-                //                $linkProperty->setPageId($file->notionID);
-                //                $link->setLinkToPage($linkProperty);
-                //                $newRootChildren[] = $link;
-            }
+            //                $link = new LinkToPageBlock;
+            //                $linkProperty = new LinkToPageProperty;
+            //                $linkProperty->setPageId($file->notionID);
+            //                $link->setLinkToPage($linkProperty);
+            //                $newRootChildren[] = $link;
+            //            }
             //
             //            // Column lists
             //            $firstLevelFolders = $rootFolder->getFolders();
