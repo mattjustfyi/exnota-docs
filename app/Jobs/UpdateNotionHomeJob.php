@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Jobs\Notion\LinkToPage;
 use App\Models\NotionDatabase;
 use App\Models\SourceSync;
 use Brd6\NotionSdkPhp\Client;
@@ -21,20 +22,20 @@ use Brd6\NotionSdkPhp\Resource\Block\ChildDatabaseBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ColumnBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ColumnListBlock;
-use Brd6\NotionSdkPhp\Resource\Block\Heading1Block;
 use Brd6\NotionSdkPhp\Resource\Block\Heading2Block;
 use Brd6\NotionSdkPhp\Resource\Block\Heading3Block;
 use Brd6\NotionSdkPhp\Resource\Block\LinkToPageBlock;
-use Brd6\NotionSdkPhp\Resource\Block\ParagraphBlock;
 use Brd6\NotionSdkPhp\Resource\Pagination\PaginationRequest;
 use Brd6\NotionSdkPhp\Resource\Property\HeadingProperty;
 use Brd6\NotionSdkPhp\Resource\Property\LinkToPageProperty;
-use Brd6\NotionSdkPhp\Resource\Property\ParagraphProperty;
 use Brd6\NotionSdkPhp\Resource\RichText\Text;
 use Http\Client\Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Notion\Blocks\Heading1;
+use Notion\Blocks\Paragraph;
+use Notion\Notion;
 use Webmozart\Assert\Assert;
 
 class UpdateNotionHomeJob implements ShouldQueue
@@ -83,7 +84,7 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Create notion client
         $options = (new ClientOptions)
             ->setAuth($token);
-        $notion = new Client($options);
+        $bernNotion = new Client($options);
 
         // Find child blocks to delete
         Log::info('Finding child blocks');
@@ -99,7 +100,7 @@ class UpdateNotionHomeJob implements ShouldQueue
                 if ($nextCursor !== null) {
                     $request->setStartCursor($nextCursor);
                 }
-                $homePageContent = $notion->blocks()->children()->list($homePageId, $request);
+                $homePageContent = $bernNotion->blocks()->children()->list($homePageId, $request);
                 if ($homePageContent->isHasMore()) {
                     $nextCursor = $homePageContent->getNextCursor();
                 }
@@ -134,7 +135,7 @@ class UpdateNotionHomeJob implements ShouldQueue
         if (count($rootChildrenToDelete) > 0) {
             foreach ($rootChildrenToDelete as $blockID) {
                 try {
-                    $notion->blocks()->delete($blockID);
+                    $bernNotion->blocks()->delete($blockID);
                 } catch (ApiResponseException|HttpResponseException|InvalidResourceException|InvalidResourceTypeException|RequestTimeoutException|UnsupportedUserTypeException|Exception $e) {
                     Log::error('Error deleting block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
                 }
@@ -152,36 +153,44 @@ class UpdateNotionHomeJob implements ShouldQueue
         try {
             $newRootChildren = [];
 
+            // TODO: Create a $marioNotion client and refactor below to use that
+            // because it supports columns
+            $marioNotion = Notion::create($token);
+
             // Spacing
-            $emptyParagraph = new ParagraphBlock;
-            $text = Text::fromContent(' ');
-            $paragraphProperty = new ParagraphProperty;
-            $paragraphProperty->setRichText([$text]);
-            $emptyParagraph->setParagraph($paragraphProperty);
+            $emptyParagraph = Paragraph::fromString(' ');
             $newRootChildren[] = $emptyParagraph;
 
-            $h1 = new Heading1Block;
-            $text = Text::fromContent('📚 Documentation');
-            $headingProperty = new HeadingProperty;
-            $headingProperty->setRichText([$text]);
-            $h1->setHeading1($headingProperty);
+            $h1 = Heading1::fromString('📚 Documentation');
             $newRootChildren[] = $h1;
 
-            //            // Root level
-            //            //            $rootH2 = new Heading2Block;
-            //            // [h2] added temporarily to aid testing; it's hard to distinguish in Notion
-            //            //            $text = Text::fromContent('[h2] '.$rootFolder->name);
-            //            //            $headingProperty = new HeadingProperty;
-            //            //            $headingProperty->setRichText([$text]);
-            //            //            $rootH2->setHeading2($headingProperty);
-            //            //            $blocks[] = $rootH2;
-            //
+            // Root level
+            //            $rootH2 = new Heading2Block;
+            // [h2] added temporarily to aid testing; it's hard to distinguish in Notion
+            //            $text = Text::fromContent('[h2] '.$rootFolder->name);
+            //            $headingProperty = new HeadingProperty;
+            //            $headingProperty->setRichText([$text]);
+            //            $rootH2->setHeading2($headingProperty);
+            //            $blocks[] = $rootH2;
+
             foreach ($rootFolder->getFiles() as $file) {
-                $link = new LinkToPageBlock;
-                $linkProperty = new LinkToPageProperty;
-                $linkProperty->setPageId($file->notionID);
-                $link->setLinkToPage($linkProperty);
-                $newRootChildren[] = $link;
+                // TODO: 'LinkToPage' not supported by marioNotion -_-
+                // Attempt 1: Create my own LinkToPage class
+                // - first just copy the bookmark class and try using that
+                // - then rename it and ensure it works
+                // - then modify to be link_to_page and see if that works.
+                //
+                // If not, maybe just do this request as a direct http request and
+                // get AI to write it.
+
+                $linkToPage = LinkToPage::fromUrl('https://matt.fyi');
+                $newRootChildren[] = $linkToPage;
+
+                //                $link = new LinkToPageBlock;
+                //                $linkProperty = new LinkToPageProperty;
+                //                $linkProperty->setPageId($file->notionID);
+                //                $link->setLinkToPage($linkProperty);
+                //                $newRootChildren[] = $link;
             }
             //
             //            // Column lists
@@ -256,7 +265,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             // Notion has a 100 limit for the number of blocks appended at once
             $blockChunks = array_chunk($newRootChildren, 100);
             foreach ($blockChunks as $blockChunk) {
-                $notion->blocks()->children()->append($homePageId, $blockChunk);
+                $marioNotion->blocks()->append($homePageId, $blockChunk);
             }
         } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
