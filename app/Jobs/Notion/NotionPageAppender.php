@@ -7,7 +7,7 @@ namespace App\Jobs\Notion;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
-class NotionApiHelper
+class NotionPageAppender
 {
     /**
      * Notion API base URL

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Jobs\Notion\NotionApiHelper;
+use App\Jobs\Notion\NotionPageAppender;
 use App\Models\NotionDatabase;
 use App\Models\SourceSync;
 use Brd6\NotionSdkPhp\Client;
@@ -161,7 +161,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             // get AI to write it.
 
             // In a controller or command
-            $notionHelper = new NotionApiHelper($homePageId, $token);
+            $notionHelper = new NotionPageAppender($homePageId, $token);
 
             // Add multiple paragraphs
             $notionHelper->appendParagraph('First paragraph')
