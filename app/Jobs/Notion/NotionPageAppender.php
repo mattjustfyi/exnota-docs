@@ -30,9 +30,9 @@ class NotionPageAppender
     protected $pageId;
 
     /**
-     * Pending paragraphs to be appended
+     * Pending blocks to be appended
      */
-    protected $pendingParagraphs = [];
+    protected $pendingBlocks = [];
 
     /**
      * Constructor
@@ -60,7 +60,7 @@ class NotionPageAppender
     }
 
     /**
-     * Submit the pending paragraphs to the Notion API
+     * Submit the pending blocks to the Notion API
      *
      * @return Response
      */
@@ -69,12 +69,12 @@ class NotionPageAppender
         $endpoint = "{$this->baseUrl}/blocks/{$this->pageId}/children";
 
         $payload = [
-            'children' => $this->pendingParagraphs,
+            'children' => $this->pendingBlocks,
         ];
 
-        // Clear the pending paragraphs after submitting
+        // Clear the pending blocks after submitting
         $response = $this->makeRequest('PATCH', $endpoint, $payload);
-        $this->pendingParagraphs = [];
+        $this->pendingBlocks = [];
 
         return $response;
     }
@@ -119,7 +119,91 @@ class NotionPageAppender
             ],
         ];
 
-        $this->pendingParagraphs[] = $paragraph;
+        $this->pendingBlocks[] = $paragraph;
+
+        return $this;
+    }
+
+    /**
+     * Add an H1 heading to the pending list
+     *
+     * @param  string  $text  The text content for the heading block
+     * @return $this
+     */
+    public function appendHeading1($text)
+    {
+        $heading = [
+            'object' => 'block',
+            'type' => 'heading_1',
+            'heading_1' => [
+                'rich_text' => [
+                    [
+                        'type' => 'text',
+                        'text' => [
+                            'content' => $text,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->pendingBlocks[] = $heading;
+
+        return $this;
+    }
+
+    /**
+     * Add an H2 heading to the pending list
+     *
+     * @param  string  $text  The text content for the heading block
+     * @return $this
+     */
+    public function appendHeading2($text)
+    {
+        $heading = [
+            'object' => 'block',
+            'type' => 'heading_2',
+            'heading_2' => [
+                'rich_text' => [
+                    [
+                        'type' => 'text',
+                        'text' => [
+                            'content' => $text,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->pendingBlocks[] = $heading;
+
+        return $this;
+    }
+
+    /**
+     * Add an H3 heading to the pending list
+     *
+     * @param  string  $text  The text content for the heading block
+     * @return $this
+     */
+    public function appendHeading3($text)
+    {
+        $heading = [
+            'object' => 'block',
+            'type' => 'heading_3',
+            'heading_3' => [
+                'rich_text' => [
+                    [
+                        'type' => 'text',
+                        'text' => [
+                            'content' => $text,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->pendingBlocks[] = $heading;
 
         return $this;
     }

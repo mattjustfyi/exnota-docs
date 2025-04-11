@@ -161,15 +161,19 @@ class UpdateNotionHomeJob implements ShouldQueue
             // get AI to write it.
 
             // In a controller or command
-            $notionHelper = new NotionPageAppender($homePageId, $token);
+            $notionAppender = new NotionPageAppender($homePageId, $token);
 
             // Add multiple paragraphs
-            $notionHelper->appendParagraph('First paragraph')
-                ->appendParagraph('Second paragraph')
-                ->appendParagraph('Third paragraph');
-
+            $notionAppender
+                ->appendHeading1('Main Title')
+                ->appendParagraph('This is an introduction paragraph.')
+                ->appendHeading2('First Section')
+                ->appendParagraph('Content for the first section.')
+                ->appendHeading3('Subsection')
+                ->appendParagraph('Detailed information in the subsection.')
+                ->submit();
             // Submit all paragraphs in one request
-            $notionHelper->submit();
+            $notionAppender->submit();
 
             //            $newRootChildren = [];
             //
