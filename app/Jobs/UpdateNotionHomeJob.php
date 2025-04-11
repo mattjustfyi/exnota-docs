@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Jobs\Notion\LinkToPage;
+use App\Jobs\Notion\NotionApiHelper;
 use App\Models\NotionDatabase;
 use App\Models\SourceSync;
 use Brd6\NotionSdkPhp\Client;
@@ -183,8 +183,25 @@ class UpdateNotionHomeJob implements ShouldQueue
                 // If not, maybe just do this request as a direct http request and
                 // get AI to write it.
 
-                $linkToPage = LinkToPage::fromUrl('https://matt.fyi');
-                $newRootChildren[] = $linkToPage;
+                // In a controller or command
+                $notionHelper = new NotionApiHelper($token);
+                $response = $notionHelper->appendParagraphBlock($homePageId);
+
+                // To add custom text
+                $response = $notionHelper->appendParagraphBlock($homePageId, 'Your custom paragraph text here');
+
+                // Check the response
+                if ($response->successful()) {
+                    // Block was added successfully
+                    Log::info('Paragraph created');
+                } else {
+                    // Handle error
+                    $error = $response->json();
+                    Log::error('Paragraph created', ['error' => $error]);
+                }
+
+                //                $linkToPage = LinkToPage::fromPageId('1a6944fb-b2bc-81ec-93af-d178b3cab8d9');
+                //                $newRootChildren[] = $linkToPage;
 
                 //                $link = new LinkToPageBlock;
                 //                $linkProperty = new LinkToPageProperty;
@@ -263,10 +280,10 @@ class UpdateNotionHomeJob implements ShouldQueue
             //            }
 
             // Notion has a 100 limit for the number of blocks appended at once
-            $blockChunks = array_chunk($newRootChildren, 100);
-            foreach ($blockChunks as $blockChunk) {
-                $marioNotion->blocks()->append($homePageId, $blockChunk);
-            }
+            //            $blockChunks = array_chunk($newRootChildren, 100);
+            //            foreach ($blockChunks as $blockChunk) {
+            //                $marioNotion->blocks()->append($homePageId, $blockChunk);
+            //            }
         } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
