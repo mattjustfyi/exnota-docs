@@ -168,6 +168,13 @@ class UpdateNotionHomeJob implements ShouldQueue
                 ->appendParagraph('Detailed information in the subsection.')
                 ->submit();
 
+            // Add test page with link_to_page example
+            $notionAppender
+                ->appendHeading2('Test Page Links')
+                ->appendParagraph('Below is a link to a test page:')
+                ->appendLinkToPage('1a6944fb-b2bc-81ec-93af-d178b3cab8d9') // Replace with actual page ID when using
+                ->submit();
+
             $notionAppender->startColumnList()
                 ->addColumn()
                 ->appendHeading2ToColumn('First Column Heading')
@@ -175,6 +182,18 @@ class UpdateNotionHomeJob implements ShouldQueue
                 ->addColumn()
                 ->appendHeading2ToColumn('Second Column Heading')
                 ->appendParagraphToColumn('Content for second column')
+                ->submit();
+
+            // Column with link_to_page example
+            $notionAppender->startColumnList()
+                ->addColumn()
+                ->appendHeading2ToColumn('Links Column 1')
+                ->appendParagraphToColumn('This column contains a page link:')
+                ->appendLinkToPageToColumn('1a6944fb-b2bc-81ec-93af-d178b3cab8d9') // Replace with actual page ID when using
+                ->addColumn()
+                ->appendHeading2ToColumn('Links Column 2')
+                ->appendParagraphToColumn('This column also contains a page link:')
+                ->appendLinkToPageToColumn('1a6944fb-b2bc-81ec-93af-d178b3cab8d9') // Replace with actual page ID when using
                 ->submit();
             // Submit all paragraphs in one request
             $notionAppender->submit();
@@ -205,16 +224,6 @@ class UpdateNotionHomeJob implements ShouldQueue
             //
             //                // To add custom text
             //                $response = $notionHelper->appendParagraphBlock($homePageId, 'Your custom paragraph text here');
-
-            // Check the response
-            //                if ($response->successful()) {
-            //                    // Block was added successfully
-            //                    Log::info('Paragraph created');
-            //                } else {
-            //                    // Handle error
-            //                    $error = $response->json();
-            //                    Log::error('Paragraph created', ['error' => $error]);
-            //                }
 
             //                $linkToPage = LinkToPage::fromPageId('1a6944fb-b2bc-81ec-93af-d178b3cab8d9');
             //                $newRootChildren[] = $linkToPage;

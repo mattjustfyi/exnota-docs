@@ -369,4 +369,42 @@ class NotionPageAppender
             $type => $content
         ];
     }
+
+    /**
+     * Add a link_to_page block to the pending list
+     *
+     * @param  string  $pageId  The ID of the page to link to
+     * @return $this
+     */
+    public function appendLinkToPage($pageId)
+    {
+        $linkToPage = [
+            'object' => 'block',
+            'type' => 'link_to_page',
+            'link_to_page' => [
+                'type' => 'page_id',
+                'page_id' => $pageId,
+            ],
+        ];
+
+        $this->pendingBlocks[] = $linkToPage;
+
+        return $this;
+    }
+
+    /**
+     * Add a link_to_page block to the most recent column
+     * 
+     * @param string $pageId The ID of the page to link to
+     * @return $this
+     */
+    public function appendLinkToPageToColumn($pageId)
+    {
+        $this->appendBlockToColumn('link_to_page', [
+            'type' => 'page_id',
+            'page_id' => $pageId,
+        ]);
+
+        return $this;
+    }
 }
