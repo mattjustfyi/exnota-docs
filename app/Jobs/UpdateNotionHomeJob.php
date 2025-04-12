@@ -254,7 +254,7 @@ class UpdateNotionHomeJob implements ShouldQueue
                 $notionAppender->submit();
             }
 
-            // Note: The NotionPageAppender class handles chunking internally when calling submit()
+            // The NotionPageAppender handles chunking internally (Notion has a 100 block limit per request)
         } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */

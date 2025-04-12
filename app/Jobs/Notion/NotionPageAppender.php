@@ -68,15 +68,22 @@ class NotionPageAppender
     {
         $endpoint = "{$this->baseUrl}/blocks/{$this->pageId}/children";
 
-        $payload = [
-            'children' => $this->pendingBlocks,
-        ];
+        // Notion has a 100 limit for the number of blocks appended at once
+        $blockChunks = array_chunk($this->pendingBlocks, 100);
+        $lastResponse = null;
+
+        foreach ($blockChunks as $blockChunk) {
+            $payload = [
+                'children' => $blockChunk,
+            ];
+
+            $lastResponse = $this->makeRequest('PATCH', $endpoint, $payload);
+        }
 
         // Clear the pending blocks after submitting
-        $response = $this->makeRequest('PATCH', $endpoint, $payload);
         $this->pendingBlocks = [];
 
-        return $response;
+        return $lastResponse ?? null;
     }
 
     /**
