@@ -198,16 +198,11 @@ class UpdateNotionHomeJob implements ShouldQueue
             // Submit all paragraphs in one request
             $notionAppender->submit();
 
-            //            $newRootChildren = [];
-            //
-            //            $marioNotion = Notion::create($token);
-            //
-            //            // Spacing
-            //            $emptyParagraph = Paragraph::fromString(' ');
-            //            $newRootChildren[] = $emptyParagraph;
-            //
-            //            $h1 = Heading1::fromString('📚 Documentation');
-            //            $newRootChildren[] = $h1;
+            // Add empty paragraph for spacing and documentation heading
+            $notionAppender
+                ->appendParagraph(' ')
+                ->appendHeading1('📚 Documentation')
+                ->submit();
 
             // Root level
             //            $rootH2 = new Heading2Block;
@@ -234,6 +229,14 @@ class UpdateNotionHomeJob implements ShouldQueue
             //                $link->setLinkToPage($linkProperty);
             //                $newRootChildren[] = $link;
             //            }
+
+            // Add root heading (with temporary [h2] marker) and its files
+            $notionAppender->appendHeading2('[h2] ' . $rootFolder->name);
+            foreach ($rootFolder->getFiles() as $file) {
+                $notionAppender->appendLinkToPage($file->notionID);
+            }
+            $notionAppender->submit();
+
             //
             //            // Column lists
             //            $firstLevelFolders = $rootFolder->getFolders();
@@ -304,11 +307,54 @@ class UpdateNotionHomeJob implements ShouldQueue
             //                $newRootChildren[] = $columnList;
             //            }
 
+            // Column lists for first level folders (two columns per row)
+            $firstLevelFolders = $rootFolder->getFolders();
+            for ($i = 0; $i < count($firstLevelFolders); $i += 2) {
+                // Get left and right folders for columns
+                $folderLeft = $firstLevelFolders[$i];
+                $folderRight = $i + 1 < count($firstLevelFolders) ? $firstLevelFolders[$i + 1] : null;
+                // array_filter should remove falsey values
+                $columnFolders = array_filter([$folderLeft, $folderRight]);
+
+                // Start a new column list
+                $notionAppender->startColumnList();
+
+                // Create each column
+                foreach ($columnFolders as $folder) {
+                    // Add a column
+                    $notionAppender->addColumn();
+
+                    // Level 1 name
+                    $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
+
+                    // Level 1 files
+                    foreach ($folder->getFiles() as $file) {
+                        $notionAppender->appendLinkToPageToColumn($file->notionID);
+                    }
+
+                    // Level 2 folders
+                    $secondLevelFolders = $folder->getFolders();
+                    foreach ($secondLevelFolders as $secondLevelFolder) {
+                        // Level 2 name
+                        $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
+
+                        // Level 2 files
+                        foreach ($secondLevelFolder->getFiles() as $file) {
+                            $notionAppender->appendLinkToPageToColumn($file->notionID);
+                        }
+                    }
+                }
+
+                // Submit the column list
+                $notionAppender->submit();
+            }
+
             // Notion has a 100 limit for the number of blocks appended at once
             //            $blockChunks = array_chunk($newRootChildren, 100);
             //            foreach ($blockChunks as $blockChunk) {
             //                $marioNotion->blocks()->append($homePageId, $blockChunk);
             //            }
+            // Note: The NotionPageAppender class handles chunking internally when calling submit()
         } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
