@@ -204,108 +204,13 @@ class UpdateNotionHomeJob implements ShouldQueue
                 ->appendHeading1('📚 Documentation')
                 ->submit();
 
-            // Root level
-            //            $rootH2 = new Heading2Block;
-            // [h2] added temporarily to aid testing; it's hard to distinguish in Notion
-            //            $text = Text::fromContent('[h2] '.$rootFolder->name);
-            //            $headingProperty = new HeadingProperty;
-            //            $headingProperty->setRichText([$text]);
-            //            $rootH2->setHeading2($headingProperty);
-            //            $blocks[] = $rootH2;
-
-            //            foreach ($rootFolder->getFiles() as $file) {
-
-            //                $response = $notionHelper->appendParagraphBlock($homePageId);
-            //
-            //                // To add custom text
-            //                $response = $notionHelper->appendParagraphBlock($homePageId, 'Your custom paragraph text here');
-
-            //                $linkToPage = LinkToPage::fromPageId('1a6944fb-b2bc-81ec-93af-d178b3cab8d9');
-            //                $newRootChildren[] = $linkToPage;
-
-            //                $link = new LinkToPageBlock;
-            //                $linkProperty = new LinkToPageProperty;
-            //                $linkProperty->setPageId($file->notionID);
-            //                $link->setLinkToPage($linkProperty);
-            //                $newRootChildren[] = $link;
-            //            }
-
+            // Root level - [h2] added temporarily to aid testing; it's hard to distinguish in Notion
             // Add root heading (with temporary [h2] marker) and its files
             $notionAppender->appendHeading2('[h2] ' . $rootFolder->name);
             foreach ($rootFolder->getFiles() as $file) {
                 $notionAppender->appendLinkToPage($file->notionID);
             }
             $notionAppender->submit();
-
-            //
-            //            // Column lists
-            //            $firstLevelFolders = $rootFolder->getFolders();
-            //            for ($i = 0; $i < count($firstLevelFolders); $i += 2) {
-            //                // Create columns
-            //                /** @var ColumnBlock[] $columns */
-            //                $columns = [];
-            //
-            //                // Get left and right folders for columns
-            //                $folderLeft = $firstLevelFolders[$i];
-            //                $folderRight = $i + 1 < count($firstLevelFolders) ? $firstLevelFolders[$i + 1] : null;
-            //                // array_filter should remove falsey values.
-            //                $columnFolders = array_filter([$folderLeft, $folderRight]);
-            //
-            //                // Columns
-            //                foreach ($columnFolders as $folder) {
-            //                    // Create column children
-            //                    /** @var array<int, AbstractBlock> $columnChildren */
-            //                    $columnChildren = [];
-            //
-            //                    // Level 1 name
-            //                    $heading = new Heading2Block;
-            //                    $text = Text::fromContent('[h2] '.$folder->name);
-            //                    $headingProperty = new HeadingProperty;
-            //                    $headingProperty->setRichText([$text]);
-            //                    $heading->setHeading2($headingProperty);
-            //                    $columnChildren[] = $heading;
-            //
-            //                    // Level 1 files
-            //                    foreach ($folder->getFiles() as $file) {
-            //                        $link = new LinkToPageBlock;
-            //                        $linkProperty = new LinkToPageProperty;
-            //                        $linkProperty->setPageId($file->notionID);
-            //                        $link->setLinkToPage($linkProperty);
-            //                        $columnChildren[] = $link;
-            //                    }
-            //
-            //                    // Level 2 folders
-            //                    $secondLevelFolders = $folder->getFolders();
-            //                    foreach ($secondLevelFolders as $secondLevelFolder) {
-            //                        // Level 2 name
-            //                        $heading = new Heading3Block;
-            //                        $text = Text::fromContent('[h3] '.$secondLevelFolder->name);
-            //                        $headingProperty = new HeadingProperty;
-            //                        $headingProperty->setRichText([$text]);
-            //                        $heading->setHeading3($headingProperty);
-            //                        $columnChildren[] = $heading;
-            //
-            //                        // Level 2 files
-            //                        foreach ($secondLevelFolder->getFiles() as $file) {
-            //                            $link = new LinkToPageBlock;
-            //                            $linkProperty = new LinkToPageProperty;
-            //                            $linkProperty->setPageId($file->notionID);
-            //                            $link->setLinkToPage($linkProperty);
-            //                            $columnChildren[] = $link;
-            //                        }
-            //                    }
-            //
-            //                    // Add children to column, and column to list
-            //                    $column = new ColumnBlock;
-            //                    $column->setChildren($columnChildren);
-            //                    $columns[] = $column;
-            //                }
-            //
-            //                // Add columns to list, and list to root
-            //                $columnList = new ColumnListBlock;
-            //                $columnList->setChildren($columns);
-            //                $newRootChildren[] = $columnList;
-            //            }
 
             // Column lists for first level folders (two columns per row)
             $firstLevelFolders = $rootFolder->getFolders();
@@ -349,11 +254,6 @@ class UpdateNotionHomeJob implements ShouldQueue
                 $notionAppender->submit();
             }
 
-            // Notion has a 100 limit for the number of blocks appended at once
-            //            $blockChunks = array_chunk($newRootChildren, 100);
-            //            foreach ($blockChunks as $blockChunk) {
-            //                $marioNotion->blocks()->append($homePageId, $blockChunk);
-            //            }
             // Note: The NotionPageAppender class handles chunking internally when calling submit()
         } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
