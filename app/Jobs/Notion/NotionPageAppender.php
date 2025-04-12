@@ -6,6 +6,7 @@ namespace App\Jobs\Notion;
 
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class NotionPageAppender
 {
@@ -35,6 +36,11 @@ class NotionPageAppender
     protected $pendingBlocks = [];
 
     /**
+     * Flag to track if any request has failed
+     */
+    protected $hasRequestFailed = false;
+
+    /**
      * Constructor
      *
      * @param  string  $pageId  Notion page ID
@@ -62,28 +68,55 @@ class NotionPageAppender
     /**
      * Submit the pending blocks to the Notion API
      *
-     * @return Response
+     * @return Response|null
      */
     public function submit()
     {
+        if ($this->hasRequestFailed) {
+            Log::warning('Skipping submit due to previous request failure', [
+                'pageId' => $this->pageId,
+                'pendingBlocksCount' => count($this->pendingBlocks)
+            ]);
+            return null;
+        }
+
         $endpoint = "{$this->baseUrl}/blocks/{$this->pageId}/children";
 
         // Notion has a 100 limit for the number of blocks appended at once
         $blockChunks = array_chunk($this->pendingBlocks, 100);
         $lastResponse = null;
 
-        foreach ($blockChunks as $blockChunk) {
+        foreach ($blockChunks as $index => $blockChunk) {
             $payload = [
                 'children' => $blockChunk,
             ];
 
             $lastResponse = $this->makeRequest('PATCH', $endpoint, $payload);
+
+            if (!$lastResponse->successful()) {
+                $this->hasRequestFailed = true;
+                Log::error('Failed to append blocks to Notion page', [
+                    'pageId' => $this->pageId,
+                    'chunkIndex' => $index,
+                    'chunkSize' => count($blockChunk),
+                    'statusCode' => $lastResponse->status(),
+                    'response' => $lastResponse->json(),
+                    'payload' => $payload
+                ]);
+                break;
+            }
+
+            Log::info('Successfully appended blocks to Notion page', [
+                'pageId' => $this->pageId,
+                'chunkIndex' => $index,
+                'chunkSize' => count($blockChunk)
+            ]);
         }
 
         // Clear the pending blocks after submitting
         $this->pendingBlocks = [];
 
-        return $lastResponse ?? null;
+        return $lastResponse;
     }
 
     /**
@@ -96,11 +129,33 @@ class NotionPageAppender
      */
     protected function makeRequest($method, $endpoint, $payload = [])
     {
-        return Http::withHeaders([
-            'Authorization' => "Bearer {$this->apiToken}",
-            'Content-Type' => 'application/json',
-            'Notion-Version' => $this->notionVersion,
-        ])->$method($endpoint, $payload);
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$this->apiToken}",
+                'Content-Type' => 'application/json',
+                'Notion-Version' => $this->notionVersion,
+            ])->$method($endpoint, $payload);
+
+            if (!$response->successful()) {
+                Log::error('Notion API request failed', [
+                    'method' => $method,
+                    'endpoint' => $endpoint,
+                    'statusCode' => $response->status(),
+                    'response' => $response->json()
+                ]);
+            }
+
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Exception occurred during Notion API request', [
+                'method' => $method,
+                'endpoint' => $endpoint,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->hasRequestFailed = true;
+            throw $e;
+        }
     }
 
     /**
