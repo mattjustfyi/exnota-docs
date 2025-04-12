@@ -258,6 +258,18 @@ More: https://github.com/larastan/larastan/blob/3.x/docs/features.md#model-relat
 
 * `findOrFail` and similar may error if given ID is `mixed`
 
+## Libraries
+
+### Notion
+
+#### mariosimao/notion-sdk-php
+
+- Doesn't support Link to Page blocks.
+
+#### brd6/notion-sdk-php
+
+- Columns don't work, even though there are classes for them.
+
 ## Troubleshooting
 
 ### Property hooks and debugging
