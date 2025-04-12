@@ -74,7 +74,7 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Get notion details
         $token = $this->database->notionWorkspace?->token;
         if ($token === null) {
-            Log::error('No token found for database '.$this->database->id);
+            Log::error('No token found for database ' . $this->database->id);
             $this->release();
 
             return;
@@ -124,7 +124,7 @@ class UpdateNotionHomeJob implements ShouldQueue
                     }
                 }
             } while ($homePageContent->isHasMore());
-        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+        } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error getting children', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;
@@ -136,7 +136,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             foreach ($rootChildrenToDelete as $blockID) {
                 try {
                     $bernNotion->blocks()->delete($blockID);
-                } catch (ApiResponseException|HttpResponseException|InvalidResourceException|InvalidResourceTypeException|RequestTimeoutException|UnsupportedUserTypeException|Exception $e) {
+                } catch (ApiResponseException | HttpResponseException | InvalidResourceException | InvalidResourceTypeException | RequestTimeoutException | UnsupportedUserTypeException | Exception $e) {
                     Log::error('Error deleting block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
                 }
             }
@@ -151,14 +151,9 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Add home page blocks
         Log::info('Creating new child blocks');
         try {
-            // TODO: 'LinkToPage' not supported by marioNotion -_-
-            // Attempt 1: Create my own LinkToPage class
-            // - first just copy the bookmark class and try using that
-            // - then rename it and ensure it works
-            // - then modify to be link_to_page and see if that works.
-            //
-            // If not, maybe just do this request as a direct http request and
-            // get AI to write it.
+            // TODO:
+            // - link_to_page support in appender
+            // - column support in appender
 
             // In a controller or command
             $notionAppender = new NotionPageAppender($homePageId, $token);
@@ -172,13 +167,20 @@ class UpdateNotionHomeJob implements ShouldQueue
                 ->appendHeading3('Subsection')
                 ->appendParagraph('Detailed information in the subsection.')
                 ->submit();
+
+            $notionAppender->startColumnList()
+                ->addColumn()
+                ->appendHeading2ToColumn('First Column Heading')
+                ->appendParagraphToColumn('Content for first column')
+                ->addColumn()
+                ->appendHeading2ToColumn('Second Column Heading')
+                ->appendParagraphToColumn('Content for second column')
+                ->submit();
             // Submit all paragraphs in one request
             $notionAppender->submit();
 
             //            $newRootChildren = [];
             //
-            //            // TODO: Create a $marioNotion client and refactor below to use that
-            //            // because it supports columns
             //            $marioNotion = Notion::create($token);
             //
             //            // Spacing
@@ -298,7 +300,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             //            foreach ($blockChunks as $blockChunk) {
             //                $marioNotion->blocks()->append($homePageId, $blockChunk);
             //            }
-        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+        } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
             throw $e;

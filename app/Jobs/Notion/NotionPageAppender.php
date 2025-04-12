@@ -207,4 +207,166 @@ class NotionPageAppender
 
         return $this;
     }
+
+    /**
+     * Start a column list block
+     * 
+     * @return $this
+     */
+    public function startColumnList()
+    {
+        $this->pendingBlocks[] = [
+            'object' => 'block',
+            'type' => 'column_list',
+            'column_list' => [
+                'children' => []
+            ]
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Add a column to the most recent column list
+     * 
+     * @return $this
+     */
+    public function addColumn()
+    {
+        // Find the most recent column_list
+        $lastIndex = count($this->pendingBlocks) - 1;
+
+        if ($lastIndex < 0 || $this->pendingBlocks[$lastIndex]['type'] !== 'column_list') {
+            throw new \Exception('Cannot add column without a column_list');
+        }
+
+        $this->pendingBlocks[$lastIndex]['column_list']['children'][] = [
+            'object' => 'block',
+            'type' => 'column',
+            'column' => [
+                'children' => []
+            ]
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Add a paragraph to the most recent column
+     * 
+     * @param string $text The text content for the paragraph block
+     * @return $this
+     */
+    public function appendParagraphToColumn($text)
+    {
+        $this->appendBlockToColumn('paragraph', [
+            'rich_text' => [
+                [
+                    'type' => 'text',
+                    'text' => [
+                        'content' => $text,
+                    ],
+                ],
+            ],
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Add an H1 heading to the most recent column
+     * 
+     * @param string $text The text content for the heading block
+     * @return $this
+     */
+    public function appendHeading1ToColumn($text)
+    {
+        $this->appendBlockToColumn('heading_1', [
+            'rich_text' => [
+                [
+                    'type' => 'text',
+                    'text' => [
+                        'content' => $text,
+                    ],
+                ],
+            ],
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Add an H2 heading to the most recent column
+     * 
+     * @param string $text The text content for the heading block
+     * @return $this
+     */
+    public function appendHeading2ToColumn($text)
+    {
+        $this->appendBlockToColumn('heading_2', [
+            'rich_text' => [
+                [
+                    'type' => 'text',
+                    'text' => [
+                        'content' => $text,
+                    ],
+                ],
+            ],
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Add an H3 heading to the most recent column
+     * 
+     * @param string $text The text content for the heading block
+     * @return $this
+     */
+    public function appendHeading3ToColumn($text)
+    {
+        $this->appendBlockToColumn('heading_3', [
+            'rich_text' => [
+                [
+                    'type' => 'text',
+                    'text' => [
+                        'content' => $text,
+                    ],
+                ],
+            ],
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * Helper method to append a block to the most recent column
+     * 
+     * @param string $type The block type
+     * @param array $content The block content
+     * @return void
+     */
+    protected function appendBlockToColumn($type, $content)
+    {
+        $lastIndex = count($this->pendingBlocks) - 1;
+
+        if ($lastIndex < 0 || $this->pendingBlocks[$lastIndex]['type'] !== 'column_list') {
+            throw new \Exception('Cannot append to column without a column_list');
+        }
+
+        $columnList = &$this->pendingBlocks[$lastIndex]['column_list'];
+        $columnCount = count($columnList['children']);
+
+        if ($columnCount === 0) {
+            throw new \Exception('No columns available to append to');
+        }
+
+        $lastColumnIndex = $columnCount - 1;
+
+        $columnList['children'][$lastColumnIndex]['column']['children'][] = [
+            'object' => 'block',
+            'type' => $type,
+            $type => $content
+        ];
+    }
 }
