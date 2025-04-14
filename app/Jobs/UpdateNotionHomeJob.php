@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Exceptions\NotionColumnException;
 use App\Jobs\Notion\NotionPageAppender;
 use App\Models\NotionDatabase;
 use App\Models\SourceSync;
@@ -63,7 +64,7 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Get notion details
         $token = $this->database->notionWorkspace?->token;
         if ($token === null) {
-            Log::error('No token found for database '.$this->database->id);
+            Log::error('No token found for database ' . $this->database->id);
             $this->release();
 
             return;
@@ -113,7 +114,7 @@ class UpdateNotionHomeJob implements ShouldQueue
                     }
                 }
             } while ($homePageContent->isHasMore());
-        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+        } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error getting children', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;
@@ -125,7 +126,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             foreach ($rootChildrenToDelete as $blockID) {
                 try {
                     $bernNotion->blocks()->delete($blockID);
-                } catch (ApiResponseException|HttpResponseException|InvalidResourceException|InvalidResourceTypeException|RequestTimeoutException|UnsupportedUserTypeException|Exception $e) {
+                } catch (ApiResponseException | HttpResponseException | InvalidResourceException | InvalidResourceTypeException | RequestTimeoutException | UnsupportedUserTypeException | Exception $e) {
                     Log::error('Error deleting block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
                 }
             }
@@ -151,7 +152,7 @@ class UpdateNotionHomeJob implements ShouldQueue
 
             // Root level - [h2] added temporarily to aid testing; it's hard to distinguish in Notion
             // Add root heading (with temporary [h2] marker) and its files
-            $notionAppender->appendHeading2('[h2] '.$rootFolder->name);
+            $notionAppender->appendHeading2('[h2] ' . $rootFolder->name);
             foreach ($rootFolder->getFiles() as $file) {
                 $notionAppender->appendLinkToPage($file->notionID);
             }
@@ -190,7 +191,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             }
 
             // The NotionPageAppender handles chunking internally (Notion has a 100 block limit per request)
-        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException $e) {
+        } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | NotionColumnException $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
             throw $e;
@@ -203,9 +204,9 @@ class UpdateNotionHomeJob implements ShouldQueue
     {
         // Level 1 name
         if ($inColumn) {
-            $notionAppender->appendHeading2ToColumn('[h2] '.$folder->name);
+            $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
         } else {
-            $notionAppender->appendHeading2('[h2] '.$folder->name);
+            $notionAppender->appendHeading2('[h2] ' . $folder->name);
         }
 
         // Level 1 files
@@ -222,9 +223,9 @@ class UpdateNotionHomeJob implements ShouldQueue
         foreach ($secondLevelFolders as $secondLevelFolder) {
             // Level 2 name
             if ($inColumn) {
-                $notionAppender->appendHeading3ToColumn('[h3] '.$secondLevelFolder->name);
+                $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
             } else {
-                $notionAppender->appendHeading3('[h3] '.$secondLevelFolder->name);
+                $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
             }
 
             // Level 2 files

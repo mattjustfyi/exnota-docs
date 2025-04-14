@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs\Notion;
 
+use App\Exceptions\NotionColumnException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -292,6 +293,7 @@ class NotionPageAppender
      * Add a column to the most recent column list
      * 
      * @return $this
+     * @throws NotionColumnException
      */
     public function addColumn()
     {
@@ -299,7 +301,7 @@ class NotionPageAppender
         $lastIndex = count($this->pendingBlocks) - 1;
 
         if ($lastIndex < 0 || $this->pendingBlocks[$lastIndex]['type'] !== 'column_list') {
-            throw new \Exception('Cannot add column without a column_list');
+            throw new NotionColumnException();
         }
 
         $this->pendingBlocks[$lastIndex]['column_list']['children'][] = [
