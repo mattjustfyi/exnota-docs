@@ -151,52 +151,8 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Add home page blocks
         Log::info('Creating new child blocks');
         try {
-            // TODO:
-            // - link_to_page support in appender
-            // - column support in appender
-
             // In a controller or command
             $notionAppender = new NotionPageAppender($homePageId, $token);
-
-            // Add multiple paragraphs
-            $notionAppender
-                ->appendHeading1('Main Title')
-                ->appendParagraph('This is an introduction paragraph.')
-                ->appendHeading2('First Section')
-                ->appendParagraph('Content for the first section.')
-                ->appendHeading3('Subsection')
-                ->appendParagraph('Detailed information in the subsection.')
-                ->submit();
-
-            // Add test page with link_to_page example
-            $notionAppender
-                ->appendHeading2('Test Page Links')
-                ->appendParagraph('Below is a link to a test page:')
-                ->appendLinkToPage('1a6944fb-b2bc-81ec-93af-d178b3cab8d9') // Replace with actual page ID when using
-                ->submit();
-
-            $notionAppender->startColumnList()
-                ->addColumn()
-                ->appendHeading2ToColumn('First Column Heading')
-                ->appendParagraphToColumn('Content for first column')
-                ->addColumn()
-                ->appendHeading2ToColumn('Second Column Heading')
-                ->appendParagraphToColumn('Content for second column')
-                ->submit();
-
-            // Column with link_to_page example
-            $notionAppender->startColumnList()
-                ->addColumn()
-                ->appendHeading2ToColumn('Links Column 1')
-                ->appendParagraphToColumn('This column contains a page link:')
-                ->appendLinkToPageToColumn('1a6944fb-b2bc-81ec-93af-d178b3cab8d9') // Replace with actual page ID when using
-                ->addColumn()
-                ->appendHeading2ToColumn('Links Column 2')
-                ->appendParagraphToColumn('This column also contains a page link:')
-                ->appendLinkToPageToColumn('1a6944fb-b2bc-81ec-93af-d178b3cab8d9') // Replace with actual page ID when using
-                ->submit();
-            // Submit all paragraphs in one request
-            $notionAppender->submit();
 
             // Add empty paragraph for spacing and documentation heading
             $notionAppender
