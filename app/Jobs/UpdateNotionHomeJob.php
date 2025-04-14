@@ -51,45 +51,6 @@ class UpdateNotionHomeJob implements ShouldQueue
         private readonly bool $forceUpdate = false
     ) {}
 
-    private function appendFolderContent(NotionPageAppender $notionAppender, Folder $folder, bool $inColumn = false): void
-    {
-        // Level 1 name
-        if ($inColumn) {
-            $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
-        } else {
-            $notionAppender->appendHeading2('[h2] ' . $folder->name);
-        }
-
-        // Level 1 files
-        foreach ($folder->getFiles() as $file) {
-            if ($inColumn) {
-                $notionAppender->appendLinkToPageToColumn($file->notionID);
-            } else {
-                $notionAppender->appendLinkToPage($file->notionID);
-            }
-        }
-
-        // Level 2 folders
-        $secondLevelFolders = $folder->getFolders();
-        foreach ($secondLevelFolders as $secondLevelFolder) {
-            // Level 2 name
-            if ($inColumn) {
-                $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
-            } else {
-                $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
-            }
-
-            // Level 2 files
-            foreach ($secondLevelFolder->getFiles() as $file) {
-                if ($inColumn) {
-                    $notionAppender->appendLinkToPageToColumn($file->notionID);
-                } else {
-                    $notionAppender->appendLinkToPage($file->notionID);
-                }
-            }
-        }
-    }
-
     /**
      * Execute the job.
      */
@@ -291,5 +252,44 @@ class UpdateNotionHomeJob implements ShouldQueue
         }
 
         Log::info('UpdateNotionHomeJob handled');
+    }
+
+    private function appendFolderContent(NotionPageAppender $notionAppender, Folder $folder, bool $inColumn = false): void
+    {
+        // Level 1 name
+        if ($inColumn) {
+            $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
+        } else {
+            $notionAppender->appendHeading2('[h2] ' . $folder->name);
+        }
+
+        // Level 1 files
+        foreach ($folder->getFiles() as $file) {
+            if ($inColumn) {
+                $notionAppender->appendLinkToPageToColumn($file->notionID);
+            } else {
+                $notionAppender->appendLinkToPage($file->notionID);
+            }
+        }
+
+        // Level 2 folders
+        $secondLevelFolders = $folder->getFolders();
+        foreach ($secondLevelFolders as $secondLevelFolder) {
+            // Level 2 name
+            if ($inColumn) {
+                $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
+            } else {
+                $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
+            }
+
+            // Level 2 files
+            foreach ($secondLevelFolder->getFiles() as $file) {
+                if ($inColumn) {
+                    $notionAppender->appendLinkToPageToColumn($file->notionID);
+                } else {
+                    $notionAppender->appendLinkToPage($file->notionID);
+                }
+            }
+        }
     }
 }
