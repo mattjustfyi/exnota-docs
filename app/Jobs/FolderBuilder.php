@@ -46,11 +46,13 @@ class FolderBuilder
                 $existingFolder = $rootFolder;
                 $remainingPathParts = $pathParts;
                 for ($i = 0; $i < count($pathParts) - 1; $i++) {
-                    $folderName = $pathParts[$i];
+                    $folderName = FolderBuilder::formatFolderName($pathParts[$i]);
 
                     //  Search subfolders
-                    $nextSubfolder = array_find($existingFolder->getFolders(),
-                        fn ($folder) => $folder->name === $folderName);
+                    $nextSubfolder = array_find(
+                        $existingFolder->getFolders(),
+                        fn($folder) => $folder->name === $folderName
+                    );
                     if ($nextSubfolder === null) {
                         break;
                     }
@@ -61,11 +63,11 @@ class FolderBuilder
 
                 if (count($remainingPathParts) > 1) {
                     for ($i = 0; $i < count($remainingPathParts) - 1; $i++) {
-                        $folderName = $remainingPathParts[$i];
+                        $folderName = FolderBuilder::formatFolderName($remainingPathParts[$i]);
 
                         $folder = new Folder;
                         $folder->name = $folderName;
-                        Log::info('Created folder with name '.$folder->name);
+                        Log::info('Created folder with name ' . $folder->name);
                         $existingFolder->addFolder($folder);
                         $existingFolder = $folder;
                     }
@@ -79,7 +81,6 @@ class FolderBuilder
                 $file = new File(name: $pathParts[count($pathParts) - 1], notionID: $notionID, notionURL: $notionURL);
                 $existingFolder->addFile($file);
             }
-
         }
 
         return $rootFolder;
@@ -90,9 +91,14 @@ class FolderBuilder
         // Verify document path starts with source path
         $sourcePath = $source->path;
         if (! str_starts_with($document->path, $sourcePath)) {
-            throw new ValueError('Document path does not start with source path: '.$document->path.' ('.$sourcePath.')');
+            throw new ValueError('Document path does not start with source path: ' . $document->path . ' (' . $sourcePath . ')');
         }
 
         return substr($document->path, strlen($sourcePath));
+    }
+
+    private static function formatFolderName(string $name): string
+    {
+        return ucwords(str_replace('_', ' ', $name));
     }
 }
