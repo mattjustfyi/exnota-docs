@@ -188,6 +188,8 @@ pat --execute="include('tests/Manual/UpdatePageTest.php')"
 
 ### Home update
 
+Pre-requisite: Pages are already synced. You can use CreatePageTest.
+
 ```php
 $source = Source::find(1);
 // Currently SourceSync isn't used much by CreatePageJob
