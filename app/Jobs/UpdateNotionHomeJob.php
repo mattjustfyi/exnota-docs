@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Exceptions\NotionColumnException;
+use App\Jobs\Notion\NotionPageAppender;
 use App\Models\NotionDatabase;
 use App\Models\SourceSync;
 use Brd6\NotionSdkPhp\Client;
@@ -19,16 +21,7 @@ use Brd6\NotionSdkPhp\Exception\UnsupportedUserTypeException;
 use Brd6\NotionSdkPhp\Resource\Block\AbstractBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildDatabaseBlock;
 use Brd6\NotionSdkPhp\Resource\Block\ChildPageBlock;
-use Brd6\NotionSdkPhp\Resource\Block\Heading1Block;
-use Brd6\NotionSdkPhp\Resource\Block\Heading2Block;
-use Brd6\NotionSdkPhp\Resource\Block\Heading3Block;
-use Brd6\NotionSdkPhp\Resource\Block\LinkToPageBlock;
-use Brd6\NotionSdkPhp\Resource\Block\ParagraphBlock;
 use Brd6\NotionSdkPhp\Resource\Pagination\PaginationRequest;
-use Brd6\NotionSdkPhp\Resource\Property\HeadingProperty;
-use Brd6\NotionSdkPhp\Resource\Property\LinkToPageProperty;
-use Brd6\NotionSdkPhp\Resource\Property\ParagraphProperty;
-use Brd6\NotionSdkPhp\Resource\RichText\Text;
 use Http\Client\Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -39,18 +32,14 @@ class UpdateNotionHomeJob implements ShouldQueue
 {
     use Queueable;
 
-    private NotionDatabase $database;
-
-    private SourceSync $sourceSync;
-
     /**
      * Create a new job instance.
      */
-    public function __construct(SourceSync $sourceSync, NotionDatabase $database)
-    {
-        $this->sourceSync = $sourceSync;
-        $this->database = $database;
-    }
+    public function __construct(
+        private readonly SourceSync $sourceSync,
+        private readonly NotionDatabase $database,
+        private readonly bool $forceUpdate = false
+    ) {}
 
     /**
      * Execute the job.
@@ -59,14 +48,14 @@ class UpdateNotionHomeJob implements ShouldQueue
     {
         $filePaths = $this->sourceSync->file_paths;
         Assert::notNull($filePaths);
-        if (count($filePaths) === 0) {
+        if (! $this->forceUpdate && count($filePaths) === 0) {
             Log::info('No file paths updated: Not changing Notion home.');
 
             return;
         }
 
         // Don't update if there are no new pages
-        if (! $this->sourceSync->hasNewDocuments()) {
+        if (! $this->forceUpdate && ! $this->sourceSync->hasNewDocuments()) {
             Log::info('No new documents: Not changing Notion home.');
 
             return;
@@ -75,7 +64,7 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Get notion details
         $token = $this->database->notionWorkspace?->token;
         if ($token === null) {
-            Log::error('No token found for database '.$this->database->id);
+            Log::error('No token found for database ' . $this->database->id);
             $this->release();
 
             return;
@@ -85,23 +74,23 @@ class UpdateNotionHomeJob implements ShouldQueue
         // Create notion client
         $options = (new ClientOptions)
             ->setAuth($token);
-        $notion = new Client($options);
+        $bernNotion = new Client($options);
 
         // Find child blocks to delete
         Log::info('Finding child blocks');
-        $blocksToDelete = [];
+        /** @var array<string> $rootChildrenToDelete */
+        $rootChildrenToDelete = [];
         try {
             /** @var ?string $nextCursor */
             $nextCursor = null;
             $databaseFound = false;
-            /** @var array<string> $blocksToDelete */
             do {
                 // Request children and set new cursor, if there are more
                 $request = new PaginationRequest;
                 if ($nextCursor !== null) {
                     $request->setStartCursor($nextCursor);
                 }
-                $homePageContent = $notion->blocks()->children()->list($homePageId, $request);
+                $homePageContent = $bernNotion->blocks()->children()->list($homePageId, $request);
                 if ($homePageContent->isHasMore()) {
                     $nextCursor = $homePageContent->getNextCursor();
                 }
@@ -121,11 +110,11 @@ class UpdateNotionHomeJob implements ShouldQueue
                     // Delete if not a database or page
                     if ($databaseFound && (! ($child instanceof ChildPageBlock)) && (! ($child instanceof ChildDatabaseBlock))) {
                         $id = $child->getId();
-                        $blocksToDelete[] = $id;
+                        $rootChildrenToDelete[] = $id;
                     }
                 }
             } while ($homePageContent->isHasMore());
-        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+        } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error getting children', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection */
             throw $e;
@@ -133,11 +122,11 @@ class UpdateNotionHomeJob implements ShouldQueue
 
         // Delete child blocks
         Log::info('Deleting child blocks');
-        if (count($blocksToDelete) > 0) {
-            foreach ($blocksToDelete as $blockID) {
+        if (count($rootChildrenToDelete) > 0) {
+            foreach ($rootChildrenToDelete as $blockID) {
                 try {
-                    $notion->blocks()->delete($blockID);
-                } catch (ApiResponseException|HttpResponseException|InvalidResourceException|InvalidResourceTypeException|RequestTimeoutException|UnsupportedUserTypeException|Exception $e) {
+                    $bernNotion->blocks()->delete($blockID);
+                } catch (ApiResponseException | HttpResponseException | InvalidResourceException | InvalidResourceTypeException | RequestTimeoutException | UnsupportedUserTypeException | Exception $e) {
                     Log::error('Error deleting block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
                 }
             }
@@ -150,95 +139,103 @@ class UpdateNotionHomeJob implements ShouldQueue
         $rootFolder = FolderBuilder::build($documents, $source);
 
         // Add home page blocks
-        Log::info('Updating children');
+        Log::info('Creating new child blocks');
         try {
-            $blocks = [];
+            // In a controller or command
+            $notionAppender = new NotionPageAppender($homePageId, $token);
 
-            // Spacing
-            $emptyParagraph = new ParagraphBlock;
-            $text = Text::fromContent(' ');
-            $paragraphProperty = new ParagraphProperty;
-            $paragraphProperty->setRichText([$text]);
-            $emptyParagraph->setParagraph($paragraphProperty);
-            $blocks[] = $emptyParagraph;
+            // Add empty paragraph for spacing and documentation heading
+            $notionAppender
+                ->appendParagraph(' ')
+                ->appendHeading1('📚 Documentation')
+                ->submit();
 
-            $h1 = new Heading1Block;
-            $text = Text::fromContent('📚 Documentation');
-            $headingProperty = new HeadingProperty;
-            $headingProperty->setRichText([$text]);
-            $h1->setHeading1($headingProperty);
-            $blocks[] = $h1;
-
-            // Root level
-            $rootH2 = new Heading2Block;
-            // [h2] added temporarily to aid testing; it's hard to distinguish in Notion
-            $text = Text::fromContent('[h2] '.$rootFolder->name);
-            $headingProperty = new HeadingProperty;
-            $headingProperty->setRichText([$text]);
-            $rootH2->setHeading2($headingProperty);
-            $blocks[] = $rootH2;
-
+            // Root level - [h2] added temporarily to aid testing; it's hard to distinguish in Notion
+            // Add root heading (with temporary [h2] marker) and its files
+            $notionAppender->appendHeading2('[h2] ' . $rootFolder->name);
             foreach ($rootFolder->getFiles() as $file) {
-                $link = new LinkToPageBlock;
-                $linkProperty = new LinkToPageProperty;
-                $linkProperty->setPageId($file->notionID);
-                $link->setLinkToPage($linkProperty);
-                $blocks[] = $link;
+                $notionAppender->appendLinkToPage($file->notionID);
             }
+            $notionAppender->submit();
 
-            // Level 1 folders
+            // Column lists for first level folders (two columns per row)
             $firstLevelFolders = $rootFolder->getFolders();
-            foreach ($firstLevelFolders as $folder) {
-                // Level 1 name
-                $heading = new Heading2Block;
-                $text = Text::fromContent('[h2] '.$folder->name);
-                $headingProperty = new HeadingProperty;
-                $headingProperty->setRichText([$text]);
-                $heading->setHeading2($headingProperty);
-                $blocks[] = $heading;
+            $totalFolders = count($firstLevelFolders);
+            $lastFolderIndex = $totalFolders - 1;
 
-                // Level 1 files
-                foreach ($folder->getFiles() as $file) {
-                    $link = new LinkToPageBlock;
-                    $linkProperty = new LinkToPageProperty;
-                    $linkProperty->setPageId($file->notionID);
-                    $link->setLinkToPage($linkProperty);
-                    $blocks[] = $link;
+            // Handle pairs of folders in columns
+            for ($i = 0; $i < $totalFolders - ($totalFolders % 2); $i += 2) {
+                // Get left and right folders for columns
+                $folderLeft = $firstLevelFolders[$i];
+                $folderRight = $firstLevelFolders[$i + 1];
+
+                // Start a new column list
+                $notionAppender->startColumnList();
+
+                // Create each column
+                foreach ([$folderLeft, $folderRight] as $folder) {
+                    // Add a column
+                    $notionAppender->addColumn();
+                    $this->appendFolderContent($notionAppender, $folder, true);
                 }
 
-                // Level 2 folders
-                $secondLevelFolders = $folder->getFolders();
-                foreach ($secondLevelFolders as $secondLevelFolder) {
-                    // Level 2 name
-                    $heading = new Heading3Block;
-                    $text = Text::fromContent('[h3] '.$secondLevelFolder->name);
-                    $headingProperty = new HeadingProperty;
-                    $headingProperty->setRichText([$text]);
-                    $heading->setHeading3($headingProperty);
-                    $blocks[] = $heading;
-
-                    // Level 2 files
-                    foreach ($secondLevelFolder->getFiles() as $file) {
-                        $link = new LinkToPageBlock;
-                        $linkProperty = new LinkToPageProperty;
-                        $linkProperty->setPageId($file->notionID);
-                        $link->setLinkToPage($linkProperty);
-                        $blocks[] = $link;
-                    }
-                }
+                // Submit the column list
+                $notionAppender->submit();
             }
 
-            // Notion has a 100 limit for the number of blocks appended at once
-            $blockChunks = array_chunk($blocks, 100);
-            foreach ($blockChunks as $blockChunk) {
-                $notion->blocks()->children()->append($homePageId, $blockChunk);
+            // Handle last folder if odd number of folders
+            if ($totalFolders % 2 === 1) {
+                $lastFolder = $firstLevelFolders[$lastFolderIndex];
+                $this->appendFolderContent($notionAppender, $lastFolder);
+                $notionAppender->submit();
             }
-        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+
+            // The NotionPageAppender handles chunking internally (Notion has a 100 block limit per request)
+        } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | NotionColumnException $e) {
             Log::error('Error appending block', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'databaseId' => $this->database->id]);
             /** @noinspection PhpUnhandledExceptionInspection Rethrow to retry job. */
             throw $e;
         }
 
         Log::info('UpdateNotionHomeJob handled');
+    }
+
+    private function appendFolderContent(NotionPageAppender $notionAppender, Folder $folder, bool $inColumn = false): void
+    {
+        // Level 1 name
+        if ($inColumn) {
+            $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
+        } else {
+            $notionAppender->appendHeading2('[h2] ' . $folder->name);
+        }
+
+        // Level 1 files
+        foreach ($folder->getFiles() as $file) {
+            if ($inColumn) {
+                $notionAppender->appendLinkToPageToColumn($file->notionID);
+            } else {
+                $notionAppender->appendLinkToPage($file->notionID);
+            }
+        }
+
+        // Level 2 folders
+        $secondLevelFolders = $folder->getFolders();
+        foreach ($secondLevelFolders as $secondLevelFolder) {
+            // Level 2 name
+            if ($inColumn) {
+                $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
+            } else {
+                $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
+            }
+
+            // Level 2 files
+            foreach ($secondLevelFolder->getFiles() as $file) {
+                if ($inColumn) {
+                    $notionAppender->appendLinkToPageToColumn($file->notionID);
+                } else {
+                    $notionAppender->appendLinkToPage($file->notionID);
+                }
+            }
+        }
     }
 }

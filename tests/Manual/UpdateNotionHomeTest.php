@@ -20,4 +20,4 @@ use Webmozart\Assert\Assert;
 $sourceSync = SourceSync::find(1);
 
 // Dispatch
-App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $sourceSync->source->notionDatabase);
+App\Jobs\UpdateNotionHomeJob::dispatch($sourceSync, $sourceSync->source->notionDatabase, true /* forceUpdate */);

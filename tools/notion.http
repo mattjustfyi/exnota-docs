@@ -230,6 +230,681 @@ curl -X PATCH 'https://api.notion.com/v1/blocks/175944fbb2bc8048a172ec745e4bd05a
 	]
 }'
 
+### Append children - with columns
+PATCH https://api.notion.com/v1/blocks/183944fbb2bc805695b5d38657cb4231/children
+Authorization: Bearer {{notionAccessToken}}
+Content-Type: application/json
+Notion-Version: 2022-06-28
+
+{
+    "children": [
+        {
+            "object": "block",
+            "type": "column_list",
+            "archived": false,
+            "has_children": false,
+            "column_list": {
+                "children": [
+                    {
+                        "object": "block",
+                        "type": "column",
+                        "archived": false,
+                        "has_children": false,
+                        "column": {
+                            "children": [
+                                {
+                                    "object": "block",
+                                    "type": "heading_2",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "heading_2": {
+                                        "color": "default",
+                                        "rich_text": [
+                                            {
+                                                "type": "text",
+                                                "annotations": {
+                                                    "bold": false,
+                                                    "italic": false,
+                                                    "strikethrough": false,
+                                                    "underline": false,
+                                                    "code": false,
+                                                    "color": "default"
+                                                },
+                                                "text": {
+                                                    "content": "[h2] about"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81ec-93af-d178b3cab8d9"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81e5-814c-cbff4dfc67f9"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81be-87bb-e045f645a607"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81d6-9a59-ed2c92c6bfec"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-814a-ba66-c5bccec4cd46"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8135-a80a-d61385b27fc9"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "object": "block",
+                        "type": "column",
+                        "archived": false,
+                        "has_children": false,
+                        "column": {
+                            "children": [
+                                {
+                                    "object": "block",
+                                    "type": "heading_2",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "heading_2": {
+                                        "color": "default",
+                                        "rich_text": [
+                                            {
+                                                "type": "text",
+                                                "annotations": {
+                                                    "bold": false,
+                                                    "italic": false,
+                                                    "strikethrough": false,
+                                                    "underline": false,
+                                                    "code": false,
+                                                    "color": "default"
+                                                },
+                                                "text": {
+                                                    "content": "[h2] contributing"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-810a-9c8b-dedf9c4ad7e0"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81f0-865e-e03a3b6bc180"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8161-90fa-fb9cc0f5c0b0"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-819f-8f26-e84d89df0301"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8131-9745-f159aaebb730"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-813a-adbb-c8635628b88d"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8112-ab5f-eee3a78c2150"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81aa-88c7-cfb560b20764"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81be-a4ad-d33204c45cd0"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81b4-a2a1-c4d42ad9a30d"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81d7-b9a9-e8b90a205f0e"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8139-99ae-e3c298fb1c79"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "heading_3",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "heading_3": {
+                                        "color": "default",
+                                        "rich_text": [
+                                            {
+                                                "type": "text",
+                                                "annotations": {
+                                                    "bold": false,
+                                                    "italic": false,
+                                                    "strikethrough": false,
+                                                    "underline": false,
+                                                    "code": false,
+                                                    "color": "default"
+                                                },
+                                                "text": {
+                                                    "content": "[h3] issue_hygiene"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81d7-be71-dcebe776cd9d"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-812a-8d18-d5972b264f3f"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81f3-9379-eedf5abfcaaa"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "heading_3",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "heading_3": {
+                                        "color": "default",
+                                        "rich_text": [
+                                            {
+                                                "type": "text",
+                                                "annotations": {
+                                                    "bold": false,
+                                                    "italic": false,
+                                                    "strikethrough": false,
+                                                    "underline": false,
+                                                    "code": false,
+                                                    "color": "default"
+                                                },
+                                                "text": {
+                                                    "content": "[h3] testing"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81de-8f00-c41108bac2cb"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8113-bdc4-f6a6d2acb91a"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81c1-994b-c0b068afb990"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81e5-a1b3-c8b304a34810"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-812f-a502-d5e582c352dd"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8121-993b-f2ae219d447d"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81f2-b16d-cfa1c079972a"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8162-b737-e6c54fdcc76d"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-81c6-ae99-c051689a3870"
+                                    }
+                                },
+                                {
+                                    "object": "block",
+                                    "type": "link_to_page",
+                                    "archived": false,
+                                    "has_children": false,
+                                    "link_to_page": {
+                                        "page_id": "1a6944fb-b2bc-8106-9fc3-f3940afb2a79"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "object": "block",
+            "type": "column_list",
+            "archived": false,
+            "has_children": false,
+            "column_list": {
+            "children": [
+                {
+                    "object": "block",
+                    "type": "column",
+                    "archived": false,
+                    "has_children": false,
+                    "column": {
+                        "children": [
+                        {
+                            "object": "block",
+                            "type": "heading_2",
+                            "archived": false,
+                            "has_children": false,
+                            "heading_2": {
+                                "color": "default",
+                                "rich_text": [
+                                    {
+                                        "type": "text",
+                                        "annotations": {
+                                            "bold": false,
+                                            "italic": false,
+                                            "strikethrough": false,
+                                            "underline": false,
+                                            "code": false,
+                                            "color": "default"
+                                        },
+                                        "text": {
+                                            "content": "[h2] ecosystem"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-81d5-8cc6-cd1652b8612f"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-81e8-8905-ff781edee087"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-8174-a00f-c90306ab308b"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "heading_3",
+                            "archived": false,
+                            "has_children": false,
+                            "heading_3": {
+                                "color": "default",
+                                "rich_text": [
+                                    {
+                                        "type": "text",
+                                        "annotations": {
+                                            "bold": false,
+                                            "italic": false,
+                                            "strikethrough": false,
+                                            "underline": false,
+                                            "code": false,
+                                            "color": "default"
+                                        },
+                                        "text": {
+                                            "content": "[h3] contributing"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-81e4-9871-d6e353cf0a6d"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-811e-8cb1-ffdd6bae7e7b"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-81c8-a918-f81cabca94c6"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "heading_3",
+                            "archived": false,
+                            "has_children": false,
+                            "heading_3": {
+                                "color": "default",
+                                "rich_text": [
+                                    {
+                                        "type": "text",
+                                        "annotations": {
+                                            "bold": false,
+                                            "italic": false,
+                                            "strikethrough": false,
+                                            "underline": false,
+                                            "code": false,
+                                            "color": "default"
+                                        },
+                                        "text": {
+                                            "content": "[h3] release"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-81dc-b9e3-de8004663993"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-815e-b270-d906b02cf88b"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "heading_3",
+                            "archived": false,
+                            "has_children": false,
+                            "heading_3": {
+                                "color": "default",
+                                "rich_text": [
+                                    {
+                                        "type": "text",
+                                        "annotations": {
+                                            "bold": false,
+                                            "italic": false,
+                                            "strikethrough": false,
+                                            "underline": false,
+                                            "code": false,
+                                            "color": "default"
+                                        },
+                                        "text": {
+                                            "content": "[h3] testing"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-81da-bc8d-dc31619e8ed7"
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-811e-8475-e503732df8bb"
+                            }
+                        }
+                            ]
+                    }
+                },
+                {
+                    "object": "block",
+                    "type": "column",
+                    "archived": false,
+                    "has_children": false,
+                    "column": {
+                      "children": [
+                        {
+                            "object": "block",
+                            "type": "heading_2",
+                            "archived": false,
+                            "has_children": false,
+                            "heading_2": {
+                                "color": "default",
+                                "rich_text": [
+                                    {
+                                        "type": "text",
+                                        "annotations": {
+                                            "bold": false,
+                                            "italic": false,
+                                            "strikethrough": false,
+                                            "underline": false,
+                                            "code": false,
+                                            "color": "default"
+                                        },
+                                        "text": {
+                                            "content": "[h2] examples"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "object": "block",
+                            "type": "link_to_page",
+                            "archived": false,
+                            "has_children": false,
+                            "link_to_page": {
+                                "page_id": "1a6944fb-b2bc-81d9-8260-d81dc4ed5472"
+                            }
+                        }
+                      ]
+                    }
+                }
+                ]
+            }
+        }
+
+    ]
+}
+
 
 ### Search
 curl -X POST 'https://api.notion.com/v1/search' \
