@@ -142,58 +142,65 @@ class FolderBuilderTest extends TestCase
                 new File(name: 'zero-i.md', notionID: 'notion id zero i', notionURL: 'https://notion.url'),
                 new File(name: 'zero-ii.md', notionID: 'notion id zero ii', notionURL: 'https://notion.url'),
             ],
-            $folder->getFiles());
+            $folder->getFiles()
+        );
 
         $level1Folders = $folder->getFolders();
         $this->assertCount(2, $level1Folders);
-        $this->assertEquals('level1-a', $level1Folders[0]->name);
+        $this->assertEquals('Level1-a', $level1Folders[0]->name);
         $this->assertEquals(
             [
                 new File(name: 'one-i.md', notionID: 'notion id one i', notionURL: 'https://notion.url'),
                 new File(name: 'one-ii.md', notionID: 'notion id one ii', notionURL: 'https://notion.url'),
             ],
-            $level1Folders[0]->getFiles());
-        $this->assertEquals('level1-b', $level1Folders[1]->name);
+            $level1Folders[0]->getFiles()
+        );
+        $this->assertEquals('Level1-b', $level1Folders[1]->name);
         $this->assertEquals(
             [
                 new File(name: 'one-iii.md', notionID: 'notion id one iii', notionURL: 'https://notion.url'),
                 new File(name: 'one-iv.md', notionID: 'notion id one iv', notionURL: 'https://notion.url'),
             ],
-            $level1Folders[1]->getFiles());
+            $level1Folders[1]->getFiles()
+        );
 
         $level1aFolder = $level1Folders[0];
         $this->assertCount(2, $level1aFolder->getFolders());
-        $this->assertEquals('level2-a', $level1aFolder->getFolders()[0]->name);
+        $this->assertEquals('Level2-a', $level1aFolder->getFolders()[0]->name);
         $this->assertEquals(
             [
                 new File(name: 'two-i.md', notionID: 'notion id two i', notionURL: 'https://notion.url'),
                 new File(name: 'two-ii.md', notionID: 'notion id two ii', notionURL: 'https://notion.url'),
             ],
-            $level1aFolder->getFolders()[0]->getFiles());
-        $this->assertEquals('level2-b', $level1aFolder->getFolders()[1]->name);
+            $level1aFolder->getFolders()[0]->getFiles()
+        );
+        $this->assertEquals('Level2-b', $level1aFolder->getFolders()[1]->name);
         $this->assertEquals(
             [
                 new File(name: 'two-iii.md', notionID: 'notion id two iii', notionURL: 'https://notion.url'),
                 new File(name: 'two-iv.md', notionID: 'notion id two iv', notionURL: 'https://notion.url'),
             ],
-            $level1aFolder->getFolders()[1]->getFiles());
+            $level1aFolder->getFolders()[1]->getFiles()
+        );
 
         $level2aFolder = $level1aFolder->getFolders()[0];
         $this->assertCount(2, $level2aFolder->getFolders());
-        $this->assertEquals('level3-a', $level2aFolder->getFolders()[0]->name);
+        $this->assertEquals('Level3-a', $level2aFolder->getFolders()[0]->name);
         $this->assertEquals(
             [
                 new File(name: 'three-i.md', notionID: 'notion id three i', notionURL: 'https://notion.url'),
                 new File(name: 'three-ii.md', notionID: 'notion id three ii', notionURL: 'https://notion.url'),
             ],
-            $level2aFolder->getFolders()[0]->getFiles());
-        $this->assertEquals('level3-b', $level2aFolder->getFolders()[1]->name);
+            $level2aFolder->getFolders()[0]->getFiles()
+        );
+        $this->assertEquals('Level3-b', $level2aFolder->getFolders()[1]->name);
         $this->assertEquals(
             [
                 new File(name: 'three-iii.md', notionID: 'notion id three iii', notionURL: 'https://notion.url'),
                 new File(name: 'three-iv.md', notionID: 'notion id three iv', notionURL: 'https://notion.url'),
             ],
-            $level2aFolder->getFolders()[1]->getFiles());
+            $level2aFolder->getFolders()[1]->getFiles()
+        );
     }
 
     public function test_build_three_levels_only(): void
@@ -226,23 +233,24 @@ class FolderBuilderTest extends TestCase
         $this->assertCount(1, $folder->getFolders());
 
         $level1Folder = $folder->getFolders()[0];
-        $this->assertEquals('level1', $level1Folder->name);
+        $this->assertEquals('Level1', $level1Folder->name);
         $this->assertEquals([], $level1Folder->getFiles());
         $this->assertCount(1, $level1Folder->getFolders());
 
         $level2Folder = $level1Folder->getFolders()[0];
-        $this->assertEquals('level2', $level2Folder->name);
+        $this->assertEquals('Level2', $level2Folder->name);
         $this->assertEquals([], $level2Folder->getFiles());
         $this->assertCount(1, $level2Folder->getFolders());
 
         $level3Folder = $level2Folder->getFolders()[0];
-        $this->assertEquals('level3', $level3Folder->name);
+        $this->assertEquals('Level3', $level3Folder->name);
         $this->assertEquals(
             [
                 new File(name: 'file-i.md', notionID: 'notion id file i', notionURL: 'https://notion.url'),
                 new File(name: 'file-ii.md', notionID: 'notion id file ii', notionURL: 'https://notion.url'),
             ],
-            $level3Folder->getFiles());
+            $level3Folder->getFiles()
+        );
         $this->assertEmpty($level3Folder->getFolders());
     }
 }
