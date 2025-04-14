@@ -51,6 +51,45 @@ class UpdateNotionHomeJob implements ShouldQueue
         private readonly bool $forceUpdate = false
     ) {}
 
+    private function appendFolderContent(NotionPageAppender $notionAppender, Folder $folder, bool $inColumn = false): void
+    {
+        // Level 1 name
+        if ($inColumn) {
+            $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
+        } else {
+            $notionAppender->appendHeading2('[h2] ' . $folder->name);
+        }
+
+        // Level 1 files
+        foreach ($folder->getFiles() as $file) {
+            if ($inColumn) {
+                $notionAppender->appendLinkToPageToColumn($file->notionID);
+            } else {
+                $notionAppender->appendLinkToPage($file->notionID);
+            }
+        }
+
+        // Level 2 folders
+        $secondLevelFolders = $folder->getFolders();
+        foreach ($secondLevelFolders as $secondLevelFolder) {
+            // Level 2 name
+            if ($inColumn) {
+                $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
+            } else {
+                $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
+            }
+
+            // Level 2 files
+            foreach ($secondLevelFolder->getFiles() as $file) {
+                if ($inColumn) {
+                    $notionAppender->appendLinkToPageToColumn($file->notionID);
+                } else {
+                    $notionAppender->appendLinkToPage($file->notionID);
+                }
+            }
+        }
+    }
+
     /**
      * Execute the job.
      */
@@ -230,26 +269,7 @@ class UpdateNotionHomeJob implements ShouldQueue
                 foreach ([$folderLeft, $folderRight] as $folder) {
                     // Add a column
                     $notionAppender->addColumn();
-
-                    // Level 1 name
-                    $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
-
-                    // Level 1 files
-                    foreach ($folder->getFiles() as $file) {
-                        $notionAppender->appendLinkToPageToColumn($file->notionID);
-                    }
-
-                    // Level 2 folders
-                    $secondLevelFolders = $folder->getFolders();
-                    foreach ($secondLevelFolders as $secondLevelFolder) {
-                        // Level 2 name
-                        $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
-
-                        // Level 2 files
-                        foreach ($secondLevelFolder->getFiles() as $file) {
-                            $notionAppender->appendLinkToPageToColumn($file->notionID);
-                        }
-                    }
+                    $this->appendFolderContent($notionAppender, $folder, true);
                 }
 
                 // Submit the column list
@@ -259,24 +279,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             // Handle last folder if odd number of folders
             if ($totalFolders % 2 === 1) {
                 $lastFolder = $firstLevelFolders[$lastFolderIndex];
-
-                // Add the last folder directly (not in a column)
-                $notionAppender->appendHeading2('[h2] ' . $lastFolder->name);
-
-                // Add its files
-                foreach ($lastFolder->getFiles() as $file) {
-                    $notionAppender->appendLinkToPage($file->notionID);
-                }
-
-                // Add its subfolders
-                $secondLevelFolders = $lastFolder->getFolders();
-                foreach ($secondLevelFolders as $secondLevelFolder) {
-                    $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
-                    foreach ($secondLevelFolder->getFiles() as $file) {
-                        $notionAppender->appendLinkToPage($file->notionID);
-                    }
-                }
-
+                $this->appendFolderContent($notionAppender, $lastFolder, false);
                 $notionAppender->submit();
             }
 
