@@ -19,7 +19,7 @@ class FolderBuilder
     public static function build(Collection $documents, Source $source): Folder
     {
         $rootFolder = new Folder;
-        $rootFolder->name = 'root';
+        $rootFolder->name = 'Root';
 
         foreach ($documents as $document) {
             $relativePath = FolderBuilder::getRelativePath($document, $source);
@@ -51,7 +51,7 @@ class FolderBuilder
                     //  Search subfolders
                     $nextSubfolder = array_find(
                         $existingFolder->getFolders(),
-                        fn($folder) => $folder->name === $folderName
+                        fn ($folder) => $folder->name === $folderName
                     );
                     if ($nextSubfolder === null) {
                         break;
@@ -67,7 +67,7 @@ class FolderBuilder
 
                         $folder = new Folder;
                         $folder->name = $folderName;
-                        Log::info('Created folder with name ' . $folder->name);
+                        Log::info('Created folder with name '.$folder->name);
                         $existingFolder->addFolder($folder);
                         $existingFolder = $folder;
                     }
@@ -91,7 +91,7 @@ class FolderBuilder
         // Verify document path starts with source path
         $sourcePath = $source->path;
         if (! str_starts_with($document->path, $sourcePath)) {
-            throw new ValueError('Document path does not start with source path: ' . $document->path . ' (' . $sourcePath . ')');
+            throw new ValueError('Document path does not start with source path: '.$document->path.' ('.$sourcePath.')');
         }
 
         return substr($document->path, strlen($sourcePath));
