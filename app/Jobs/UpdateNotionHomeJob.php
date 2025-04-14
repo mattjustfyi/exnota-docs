@@ -214,18 +214,20 @@ class UpdateNotionHomeJob implements ShouldQueue
 
             // Column lists for first level folders (two columns per row)
             $firstLevelFolders = $rootFolder->getFolders();
-            for ($i = 0; $i < count($firstLevelFolders); $i += 2) {
+            $totalFolders = count($firstLevelFolders);
+            $lastFolderIndex = $totalFolders - 1;
+
+            // Handle pairs of folders in columns
+            for ($i = 0; $i < $totalFolders - ($totalFolders % 2); $i += 2) {
                 // Get left and right folders for columns
                 $folderLeft = $firstLevelFolders[$i];
-                $folderRight = $i + 1 < count($firstLevelFolders) ? $firstLevelFolders[$i + 1] : null;
-                // array_filter should remove falsey values
-                $columnFolders = array_filter([$folderLeft, $folderRight]);
+                $folderRight = $firstLevelFolders[$i + 1];
 
                 // Start a new column list
                 $notionAppender->startColumnList();
 
                 // Create each column
-                foreach ($columnFolders as $folder) {
+                foreach ([$folderLeft, $folderRight] as $folder) {
                     // Add a column
                     $notionAppender->addColumn();
 
@@ -251,6 +253,30 @@ class UpdateNotionHomeJob implements ShouldQueue
                 }
 
                 // Submit the column list
+                $notionAppender->submit();
+            }
+
+            // Handle last folder if odd number of folders
+            if ($totalFolders % 2 === 1) {
+                $lastFolder = $firstLevelFolders[$lastFolderIndex];
+
+                // Add the last folder directly (not in a column)
+                $notionAppender->appendHeading2('[h2] ' . $lastFolder->name);
+
+                // Add its files
+                foreach ($lastFolder->getFiles() as $file) {
+                    $notionAppender->appendLinkToPage($file->notionID);
+                }
+
+                // Add its subfolders
+                $secondLevelFolders = $lastFolder->getFolders();
+                foreach ($secondLevelFolders as $secondLevelFolder) {
+                    $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
+                    foreach ($secondLevelFolder->getFiles() as $file) {
+                        $notionAppender->appendLinkToPage($file->notionID);
+                    }
+                }
+
                 $notionAppender->submit();
             }
 
