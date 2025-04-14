@@ -150,9 +150,8 @@ class UpdateNotionHomeJob implements ShouldQueue
                 ->appendHeading1('📚 Documentation')
                 ->submit();
 
-            // Root level - [h2] added temporarily to aid testing; it's hard to distinguish in Notion
-            // Add root heading (with temporary [h2] marker) and its files
-            $notionAppender->appendHeading2('[h2] ' . $rootFolder->name);
+            // Root level - Add root heading and its files
+            $notionAppender->appendHeading2($rootFolder->name);
             foreach ($rootFolder->getFiles() as $file) {
                 $notionAppender->appendLinkToPage($file->notionID);
             }
@@ -204,9 +203,9 @@ class UpdateNotionHomeJob implements ShouldQueue
     {
         // Level 1 name
         if ($inColumn) {
-            $notionAppender->appendHeading2ToColumn('[h2] ' . $folder->name);
+            $notionAppender->appendHeading2ToColumn($folder->name);
         } else {
-            $notionAppender->appendHeading2('[h2] ' . $folder->name);
+            $notionAppender->appendHeading2($folder->name);
         }
 
         // Level 1 files
@@ -223,9 +222,9 @@ class UpdateNotionHomeJob implements ShouldQueue
         foreach ($secondLevelFolders as $secondLevelFolder) {
             // Level 2 name
             if ($inColumn) {
-                $notionAppender->appendHeading3ToColumn('[h3] ' . $secondLevelFolder->name);
+                $notionAppender->appendHeading3ToColumn($secondLevelFolder->name);
             } else {
-                $notionAppender->appendHeading3('[h3] ' . $secondLevelFolder->name);
+                $notionAppender->appendHeading3($secondLevelFolder->name);
             }
 
             // Level 2 files
