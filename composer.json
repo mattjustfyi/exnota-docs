@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.3.6",
         "brd6/notion-sdk-php": "^1.5",
         "filament/filament": "^3.2",
         "guzzlehttp/guzzle": "^7.9",
