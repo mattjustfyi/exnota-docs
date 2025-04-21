@@ -75,6 +75,40 @@ pat --execute="include('tests/Manual/UpdateNotionHomeTest.php')"
       ```
     - Real example: `tests/Data/Docs/OneLevel/postmortems/Postmortem-Beta-1-Release.md`
 
+## Workflow
+
+1. Get a Github token
+   * For now: Generate a classic personal access token with all 'repo' permissions: https://github.com/settings/tokens
+   * TODO: Allow users to grant access to a Github App, and get token that way. This requires refreshing tokens etc. so implement later. https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app
+2. Add a `repository` and `source` model, and the latter includes a `webhook_secret` value
+   * Create repository: https://docs.exnota.com/repositories/create
+     * URL in this format: https://api.github.com/repos/mttschltz/exnota-docs/contents
+   * Create source: https://docs.exnota.com/sources/create
+   * TODO: Add `webhook_secret` to repository model. Should be created when a repository is created. 
+   * TODO: Update to validate webhook secret AND that it matches the repo: /Users/matt/code/exnota-docs/app/Jobs/GitPushWebhookValidator.php
+3. In Github, add a webhook that points to docs.exnota.com/api/webhook/repository and passes the webhook secret
+    * Where eto add it: https://github.com/mttschltz/exnota-docs/settings/hooks
+4. TODO: Create Exnota Docs integration for Notion
+   * For now, use Exnota integration.
+5. Create home page with database in Notion
+6. Authorize Exnota Docs to access home page in Notion
+   * TODO: Create user flow for Notion auth, e.g. docs.exnota.com/notion/auth
+   * For now, auth manually.
+7. Add a `notion_database` and `notion_workspace` model, with token, DB ID and home ID.
+   * TODO: Add filament resource for adding these via admin UI.
+
+## Setting up an environment
+
+### Product
+
+1. Create a filament user
+    ```bash
+   php artisan make:filament-user
+   ```
+2. Login at `/login`
+
+
+
 ## Testing
 
 ### Full sync

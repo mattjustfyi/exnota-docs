@@ -1,8 +1,8 @@
 ### Local webhook test
 curl -X POST \
-    -H "Content-Type: application/json" \
+-H "Content-Type: application/json" \
     -d '{"code": "hihi"}' \
-    https://srwwfkxur1.sharedwithexpose.com/webhooks/git-push
+    https://srwwfkxur1.sharedwithexpose.com/webhook/repository
 
 ### Github: Get list of files
 GET https://api.github.com/repos/mttschltz/exnota-docs/contents/tests/Data/Docs/OneLevel

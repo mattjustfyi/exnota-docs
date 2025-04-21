@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // Route::view('/', 'welcome');
 //
 // Route::view('dashboard', 'dashboard')
@@ -12,4 +14,3 @@
 //
 // require __DIR__.'/auth.php';
 //
-// Route::webhooks('webhooks/git-push');
