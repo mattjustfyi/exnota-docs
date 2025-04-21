@@ -17,7 +17,7 @@ class NotionWorkspaceResource extends Resource
 {
     protected static ?string $model = NotionWorkspace::class;
 
-    protected static ?string $recordTitleAttribute = 'id';
+    protected static ?string $recordTitleAttribute = 'name';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -29,6 +29,12 @@ class NotionWorkspaceResource extends Resource
                     ->required()
                     ->disabled()
                     ->columnSpanFull(),
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('token')
+                    ->required()
+                    ->maxLength(255),
             ]);
     }
 
@@ -36,7 +42,8 @@ class NotionWorkspaceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('notionDatabases.count')
                     ->counts('notionDatabases')
