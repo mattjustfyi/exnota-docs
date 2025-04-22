@@ -88,6 +88,7 @@ pat --execute="include('tests/Manual/UpdateNotionHomeTest.php')"
    * TODO: Update to validate webhook secret AND that it matches the repo: /Users/matt/code/exnota-docs/app/Jobs/GitPushWebhookValidator.php
 3. In Github, add a webhook that points to docs.exnota.com/api/webhook/repository and passes the webhook secret
     * Where eto add it: https://github.com/mttschltz/exnota-docs/settings/hooks
+    * TODO: Handle the 'ping' it sends on creation, without attempting to create a sync or anything
 4. TODO: Create Exnota Docs integration for Notion
    * For now, use Exnota integration.
 5. Create home page with database in Notion
