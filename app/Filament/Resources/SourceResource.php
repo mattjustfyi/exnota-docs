@@ -31,7 +31,15 @@ class SourceResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('notion_database_id')
                     ->label('Notion Database')
-                    ->relationship('notionDatabase', 'name')
+                    ->options(
+                        NotionDatabase::with('notionWorkspace')
+                            ->get()
+                            ->mapWithKeys(function ($database) {
+                                return [
+                                    $database->id => "{$database->name} ({$database->notionWorkspace->name})"
+                                ];
+                            })
+                    )
                     ->searchable()
                     ->preload(),
             ]);
