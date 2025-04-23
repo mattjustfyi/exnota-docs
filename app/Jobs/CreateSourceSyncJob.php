@@ -48,7 +48,7 @@ class CreateSourceSyncJob implements ShouldQueue
         $repository = $source->repository;
         try {
             $allRemoteDocuments = $this->getFilesInDir($repository->url, $source->path, 2);
-        } catch (GitHubException|ConnectionException) {
+        } catch (GitHubException | ConnectionException) {
             $this->release();
 
             return;
@@ -69,6 +69,10 @@ class CreateSourceSyncJob implements ShouldQueue
 
             return $existingDocument->hash !== $remoteDocument->hash;
         });
+
+        if (empty($changedRemoteDocuments)) {
+            Log::info('No changed remote documents found for source', ['source_id' => $source->id]);
+        }
 
         $this->sourceSync->update([
             'file_paths' => array_map(function ($remoteDocument) {
@@ -100,7 +104,7 @@ class CreateSourceSyncJob implements ShouldQueue
         /** @noinspection PhpUnhandledExceptionInspection */
         $batch = $pendingSaveFileBatch->dispatch();
 
-        Log::info('Dispatched batch ID: '.$batch->id);
+        Log::info('Dispatched batch ID: ' . $batch->id);
     }
 
     /**
@@ -120,12 +124,12 @@ class CreateSourceSyncJob implements ShouldQueue
 
         $response = Http::withHeaders([
             'Accept' => 'application/vnd.github+json',
-            'Authorization' => 'Bearer '.$githubToken,
+            'Authorization' => 'Bearer ' . $githubToken,
             'X-GitHub-Api-Version' => '2022-11-28',
-        ])->get($base.$dirPath);
+        ])->get($base . $dirPath);
 
         if (! $response->successful()) {
-            Log::error('Failed to get files in dir: '.$dirPath);
+            Log::error('Failed to get files in dir: ' . $dirPath);
             throw new GitHubException($response->reason());
         }
 
@@ -139,8 +143,8 @@ class CreateSourceSyncJob implements ShouldQueue
             } elseif ($item['type'] === 'file') {
                 $remoteDocuments[] = new RemoteDocument(path: $item['path'], hash: $item['sha']);
             } else {
-                Log::error('Unknown item type: '.$item['type']);
-                throw new GitHubException('Unknown item type: '.$item['type']);
+                Log::error('Unknown item type: ' . $item['type']);
+                throw new GitHubException('Unknown item type: ' . $item['type']);
             }
         }
 
@@ -149,7 +153,7 @@ class CreateSourceSyncJob implements ShouldQueue
         }
 
         foreach ($subDirPaths as $subDirPath) {
-            $remoteDocuments = $this->getFilesInDir($base, '/'.$subDirPath, $depth - 1, $remoteDocuments);
+            $remoteDocuments = $this->getFilesInDir($base, '/' . $subDirPath, $depth - 1, $remoteDocuments);
         }
 
         return $remoteDocuments;

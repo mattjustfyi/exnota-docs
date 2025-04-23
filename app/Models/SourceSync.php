@@ -62,7 +62,7 @@ class SourceSync extends Model
 
         // A new document will only match itself on its path, and thus only
         // have a count of 1 when grouping on 'path'.
-        return array_any($counts, fn ($count) => $count === 1);
+        return count(array_filter($counts, fn($count) => $count === 1)) > 0;
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\Repository;
+use App\Models\Source;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -50,6 +51,9 @@ class GitPushWebhookJob extends SpatieProcessWebhookJob
 
         $contentsUrl = str_replace('/{+path}', '', $parsedPayload['repository']['contents_url']);
 
+        // TODO: Ensure the contentsUrl is as expected. I.e. we don't end up with an empty string or unexpected URL that
+        // matches something in the database unexpectedly.
+
         // Search for repository with matching URL
         $repositories = Repository::where('url', $contentsUrl)->get();
 
@@ -67,13 +71,29 @@ class GitPushWebhookJob extends SpatieProcessWebhookJob
 
         $repository = $repositories->first();
 
-        //        TODO: Create a source sync for all sources associated with the repository
-        // TODO: Only sync sources that have changed files.
+        // Find all sources associated with the repository
+        $sources = Source::where('repository_id', $repository->id)->get();
+
+        if ($sources->isEmpty()) {
+            Log::error('No sources found for repository', ['repository_id' => $repository->id]);
+            return;
+        }
+
+        // Check if more than one source found
+        if ($sources->count() > 1) {
+            Log::error('Multiple sources found for repository', ['repository_id' => $repository->id, 'count' => $sources->count()]);
+        }
+
+        // Create a source sync only for the first source
+        $source = $sources->first();
+        dispatch(new CreateSourceSyncJob($source));
+        Log::info('Dispatched CreateSourceSyncJob', ['source_id' => $source->id]);
 
         Log::info('GitPushWebhookJob completed', [
             'parsedPayload' => $parsedPayload,
             'repository' => $repository->id,
             'repository_url' => $repository->url,
+            'sources_count' => $sources->count(),
         ]);
     }
 }
