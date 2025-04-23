@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SourceResource\Pages;
 use App\Models\Source;
+use App\Models\NotionDatabase;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -28,6 +29,11 @@ class SourceResource extends Resource
                 Forms\Components\Select::make('repository_id')
                     ->relationship('repository', 'url')
                     ->required(),
+                Forms\Components\Select::make('notion_database_id')
+                    ->label('Notion Database')
+                    ->relationship('notionDatabase', 'name')
+                    ->searchable()
+                    ->preload(),
             ]);
     }
 
@@ -38,6 +44,9 @@ class SourceResource extends Resource
                 Tables\Columns\TextColumn::make('path')
                     ->limit(30),
                 Tables\Columns\TextColumn::make('repository.url')
+                    ->limit(30)
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('notionDatabase.name')
                     ->limit(30)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
