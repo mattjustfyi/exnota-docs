@@ -34,7 +34,7 @@ class CreatePageJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info('CreatePageJob started for document: '.$this->document->id);
+        Log::info('CreatePageJob started for document: ' . $this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
             Log::info('Batch cancelled. Failing job.');
             $this->fail('Batch cancelled');
@@ -49,13 +49,13 @@ class CreatePageJob implements ShouldQueue
         $databaseId = $notionDatabase?->notion_id;
 
         if ($token === null) {
-            Log::error('No token found for source '.$source?->id);
+            Log::error('No token found for source ' . $source?->id);
             $this->release();
 
             return;
         }
         if ($databaseId === null) {
-            Log::error('No database id found for source '.$source?->id);
+            Log::error('No database id found for source ' . $source?->id);
             $this->release();
 
             return;
@@ -71,9 +71,8 @@ class CreatePageJob implements ShouldQueue
         // Append new content
         $filePath = $this->document->path;
         $debugNode = config('app.debug_node');
-        $cmd = $debugNode
-            ? 'node --inspect-brk cmd/notion-export/create.js'
-            : 'node cmd/notion-export/create.js';
+
+        // Create payload
         $payload = json_encode([
             'token' => $token,
             'databaseId' => $databaseId,
@@ -85,29 +84,54 @@ class CreatePageJob implements ShouldQueue
             throw new RuntimeException('Failed to encode payload');
         }
 
-        $process = Process::fromShellCommandline($cmd);
-        $process->setInput($payload);
-        $process->setTimeout($debugNode ? 600 : 120);
-        $process->run(function ($type, $data) {
-            if ($type === Process::ERR) {
-                if (! is_string($data) || (
-                    ! str_starts_with($data, 'Debugger listening on ') &&
-                    ! str_starts_with($data, 'Debugger attached') &&
-                    ! str_starts_with($data, 'Waiting for the debugger to disconnect')
-                )) {
-                    Log::error('Error running create.js', [
-                        'data' => $data,
-                        'sourceSyncId' => $this->syncSource->id,
-                        'documentId' => $this->document->id,
-                    ]);
-                    throw new RuntimeException('Error running create.js');
-                }
-            }
-            Assert::string($data);
-            $this->parseStdout($data);
-        });
+        // Write payload to temporary file instead of piping directly
+        $tempFile = tempnam(sys_get_temp_dir(), 'notion_payload_');
+        if ($tempFile === false) {
+            Log::error('Failed to create temporary file');
+            throw new RuntimeException('Failed to create temporary file');
+        }
 
-        Log::info('CreatePageJob handled for document: '.$this->document->id);
+        if (file_put_contents($tempFile, $payload) === false) {
+            Log::error('Failed to write payload to temporary file');
+            unlink($tempFile);
+            throw new RuntimeException('Failed to write payload to temporary file');
+        }
+
+        // Modify command to read from file instead of stdin
+        $cmd = $debugNode
+            ? 'node --inspect-brk cmd/notion-export/create.js ' . escapeshellarg($tempFile)
+            : 'node cmd/notion-export/create.js ' . escapeshellarg($tempFile);
+
+        $process = Process::fromShellCommandline($cmd);
+        $process->setTimeout($debugNode ? 600 : 120);
+
+        try {
+            $process->run(function ($type, $data) {
+                if ($type === Process::ERR) {
+                    if (! is_string($data) || (
+                        ! str_starts_with($data, 'Debugger listening on ') &&
+                        ! str_starts_with($data, 'Debugger attached') &&
+                        ! str_starts_with($data, 'Waiting for the debugger to disconnect')
+                    )) {
+                        Log::error('Error running create.js', [
+                            'data' => $data,
+                            'sourceSyncId' => $this->syncSource->id,
+                            'documentId' => $this->document->id,
+                        ]);
+                        throw new RuntimeException('Error running create.js');
+                    }
+                }
+                Assert::string($data);
+                $this->parseStdout($data);
+            });
+        } finally {
+            // Clean up the temporary file
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+
+        Log::info('CreatePageJob handled for document: ' . $this->document->id);
     }
 
     public function parseStdout(string $stdout): void
