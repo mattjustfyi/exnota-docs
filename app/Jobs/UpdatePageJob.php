@@ -42,7 +42,7 @@ class UpdatePageJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info('UpdatePageJob started for document: '.$this->document->id);
+        Log::info('UpdatePageJob started for document: ' . $this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
             Log::info('Batch cancelled. Failing job.');
             $this->fail('Batch cancelled');
@@ -58,13 +58,13 @@ class UpdatePageJob implements ShouldQueue
         $databaseId = $notionDatabase?->notion_id;
 
         if ($token === null) {
-            Log::error('No token found for source '.$source?->id);
+            Log::error('No token found for source ' . $source?->id);
             $this->release();
 
             return;
         }
         if ($databaseId === null) {
-            Log::error('No database id found for source '.$source?->id);
+            Log::error('No database id found for source ' . $source?->id);
             $this->release();
 
             return;
@@ -81,7 +81,7 @@ class UpdatePageJob implements ShouldQueue
         $pageContentMutator = new PageContentMutator(pageID: $notionPageID, notion: $notion);
         try {
             $pageContentMutator->deleteAll();
-        } catch (ApiResponseException|HttpResponseException|InvalidPaginationResponseException|RequestTimeoutException|UnsupportedPaginationResponseTypeException|Exception $e) {
+        } catch (ApiResponseException | HttpResponseException | InvalidPaginationResponseException | RequestTimeoutException | UnsupportedPaginationResponseTypeException | Exception $e) {
             Log::error('Error while deleting the page content', ['exception' => $e]);
         }
 
@@ -96,8 +96,8 @@ class UpdatePageJob implements ShouldQueue
         $filePath = $this->document->path;
         $debugNode = config('app.debug_node');
         $cmd = $debugNode
-            ? 'node --inspect-brk cmd/notion-export/update.js'
-            : 'node cmd/notion-export/update.js';
+            ? 'node --inspect-brk ' . base_path('cmd/notion-export/update.js')
+            : 'node ' . base_path('cmd/notion-export/update.js');
         $payload = json_encode([
             'token' => $token,
             'pageID' => $notionPageID,
@@ -131,6 +131,6 @@ class UpdatePageJob implements ShouldQueue
             Log::info($data);
         });
 
-        Log::info('UpdatePageJob handled for document: '.$this->document->id);
+        Log::info('UpdatePageJob handled for document: ' . $this->document->id);
     }
 }
