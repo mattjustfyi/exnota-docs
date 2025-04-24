@@ -99,34 +99,58 @@ class CreatePageJob implements ShouldQueue
         }
 
         // Modify command to read from file instead of stdin
-        $cmd = $debugNode
-            ? 'node --inspect-brk cmd/notion-export/create.js ' . escapeshellarg($tempFile)
-            : 'node cmd/notion-export/create.js ' . escapeshellarg($tempFile);
+        // Try to find node executable from different possible locations
+        $possibleNodePaths = [
+            env('NODE_PATH'), // First try environment variable if set
+            '/usr/local/bin/node',
+            '/usr/bin/node',
+            '/home/exnota-docs/.nvm/versions/node/*/bin/node', // NVM installations
+            '/opt/node/bin/node',
+            'node', // Last resort, try PATH
+        ];
 
-        // Check node availability
-        $nodeCheckProcess = Process::fromShellCommandline('command -v node');
-        $nodeCheckProcess->run();
-        $nodePath = trim($nodeCheckProcess->getOutput());
-
-        if (empty($nodePath)) {
-            Log::warning('Node.js not found in PATH. Checking for nodejs...');
-            $nodejsCheckProcess = Process::fromShellCommandline('command -v nodejs');
-            $nodejsCheckProcess->run();
-            $nodejsPath = trim($nodejsCheckProcess->getOutput());
-
-            if (!empty($nodejsPath)) {
-                Log::info('Found nodejs at: ' . $nodejsPath);
-                $cmd = str_replace('node ', 'nodejs ', $cmd);
-            } else {
-                Log::error('Neither node nor nodejs found in PATH', [
-                    'PATH' => getenv('PATH'),
-                    'whoami' => trim(shell_exec('whoami') ?: ''),
-                    'pwd' => trim(shell_exec('pwd') ?: '')
-                ]);
+        $nodePath = null;
+        foreach ($possibleNodePaths as $path) {
+            if (empty($path)) {
+                continue;
             }
-        } else {
-            Log::info('Found node at: ' . $nodePath);
+
+            // Handle wildcard paths (like NVM)
+            if (strpos($path, '*') !== false) {
+                $matchedPaths = glob($path);
+                if (!empty($matchedPaths)) {
+                    // Use the latest version if multiple matches
+                    usort($matchedPaths, 'version_compare');
+                    $path = end($matchedPaths);
+                } else {
+                    continue;
+                }
+            }
+
+            // Skip if not an absolute path unless it's the default 'node'
+            if ($path !== 'node' && !str_starts_with($path, '/')) {
+                continue;
+            }
+
+            // Check if executable exists and is executable
+            if ($path === 'node' || (file_exists($path) && is_executable($path))) {
+                $nodePath = $path;
+                Log::info('Using Node.js at: ' . $nodePath);
+                break;
+            }
         }
+
+        if ($nodePath === null) {
+            Log::error('Node.js not found in any expected location', [
+                'PATH' => getenv('PATH'),
+                'tried_paths' => $possibleNodePaths
+            ]);
+            throw new RuntimeException('Node.js not found in any expected location');
+        }
+
+        $cmd = $debugNode
+            ? $nodePath . ' --inspect-brk cmd/notion-export/create.js ' . escapeshellarg($tempFile)
+            : $nodePath . ' cmd/notion-export/create.js ' . escapeshellarg($tempFile);
 
         $process = Process::fromShellCommandline($cmd);
         $process->setTimeout($debugNode ? 600 : 120);
