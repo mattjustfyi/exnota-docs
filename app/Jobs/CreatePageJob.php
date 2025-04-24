@@ -13,6 +13,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Symfony\Component\Process\Process;
+use Throwable;
 use Webmozart\Assert\Assert;
 
 class CreatePageJob implements ShouldQueue
@@ -34,7 +35,7 @@ class CreatePageJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info('CreatePageJob started for document: ' . $this->document->id);
+        Log::info('CreatePageJob started for document: '.$this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
             Log::info('Batch cancelled. Failing job.');
             $this->fail('Batch cancelled');
@@ -49,13 +50,13 @@ class CreatePageJob implements ShouldQueue
         $databaseId = $notionDatabase?->notion_id;
 
         if ($token === null) {
-            Log::error('No token found for source ' . $source?->id);
+            Log::error('No token found for source '.$source?->id);
             $this->release();
 
             return;
         }
         if ($databaseId === null) {
-            Log::error('No database id found for source ' . $source?->id);
+            Log::error('No database id found for source '.$source?->id);
             $this->release();
 
             return;
@@ -99,8 +100,8 @@ class CreatePageJob implements ShouldQueue
 
         // Modify command to read from file instead of stdin
         $cmd = $debugNode
-            ? 'node --inspect-brk cmd/notion-export/create.js ' . escapeshellarg($tempFile)
-            : 'node cmd/notion-export/create.js ' . escapeshellarg($tempFile);
+            ? 'node --inspect-brk cmd/notion-export/create.js '.escapeshellarg($tempFile)
+            : 'node cmd/notion-export/create.js '.escapeshellarg($tempFile);
 
         $process = Process::fromShellCommandline($cmd);
         $process->setTimeout($debugNode ? 600 : 120);
@@ -124,6 +125,17 @@ class CreatePageJob implements ShouldQueue
                 Assert::string($data);
                 $this->parseStdout($data);
             });
+        } catch (Throwable $e) {
+            Log::error('Exception in CreatePageJob', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'documentId' => $this->document->id,
+                'syncSourceId' => $this->syncSource->id,
+            ]);
+            /** @noinspection PhpUnhandledExceptionInspection queue should handle */
+            throw $e;
         } finally {
             // Clean up the temporary file
             if (file_exists($tempFile)) {
@@ -131,7 +143,7 @@ class CreatePageJob implements ShouldQueue
             }
         }
 
-        Log::info('CreatePageJob handled for document: ' . $this->document->id);
+        Log::info('CreatePageJob handled for document: '.$this->document->id);
     }
 
     public function parseStdout(string $stdout): void
