@@ -35,7 +35,7 @@ class CreatePageJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info('CreatePageJob started for document: '.$this->document->id);
+        Log::info('CreatePageJob started for document: ' . $this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
             Log::info('Batch cancelled. Failing job.');
             $this->fail('Batch cancelled');
@@ -50,13 +50,13 @@ class CreatePageJob implements ShouldQueue
         $databaseId = $notionDatabase?->notion_id;
 
         if ($token === null) {
-            Log::error('No token found for source '.$source?->id);
+            Log::error('No token found for source ' . $source?->id);
             $this->release();
 
             return;
         }
         if ($databaseId === null) {
-            Log::error('No database id found for source '.$source?->id);
+            Log::error('No database id found for source ' . $source?->id);
             $this->release();
 
             return;
@@ -100,8 +100,33 @@ class CreatePageJob implements ShouldQueue
 
         // Modify command to read from file instead of stdin
         $cmd = $debugNode
-            ? 'node --inspect-brk cmd/notion-export/create.js '.escapeshellarg($tempFile)
-            : 'node cmd/notion-export/create.js '.escapeshellarg($tempFile);
+            ? 'node --inspect-brk cmd/notion-export/create.js ' . escapeshellarg($tempFile)
+            : 'node cmd/notion-export/create.js ' . escapeshellarg($tempFile);
+
+        // Check node availability
+        $nodeCheckProcess = Process::fromShellCommandline('command -v node');
+        $nodeCheckProcess->run();
+        $nodePath = trim($nodeCheckProcess->getOutput());
+
+        if (empty($nodePath)) {
+            Log::warning('Node.js not found in PATH. Checking for nodejs...');
+            $nodejsCheckProcess = Process::fromShellCommandline('command -v nodejs');
+            $nodejsCheckProcess->run();
+            $nodejsPath = trim($nodejsCheckProcess->getOutput());
+
+            if (!empty($nodejsPath)) {
+                Log::info('Found nodejs at: ' . $nodejsPath);
+                $cmd = str_replace('node ', 'nodejs ', $cmd);
+            } else {
+                Log::error('Neither node nor nodejs found in PATH', [
+                    'PATH' => getenv('PATH'),
+                    'whoami' => trim(shell_exec('whoami') ?: ''),
+                    'pwd' => trim(shell_exec('pwd') ?: '')
+                ]);
+            }
+        } else {
+            Log::info('Found node at: ' . $nodePath);
+        }
 
         $process = Process::fromShellCommandline($cmd);
         $process->setTimeout($debugNode ? 600 : 120);
@@ -143,7 +168,7 @@ class CreatePageJob implements ShouldQueue
             }
         }
 
-        Log::info('CreatePageJob handled for document: '.$this->document->id);
+        Log::info('CreatePageJob handled for document: ' . $this->document->id);
     }
 
     public function parseStdout(string $stdout): void
