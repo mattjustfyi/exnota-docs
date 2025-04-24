@@ -14,4 +14,6 @@ sudo snap install --classic certbot
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 # Restart shell
 nvm install v18.18.0
+cd ~/www/cmd/notion-export
+npm install
 ```

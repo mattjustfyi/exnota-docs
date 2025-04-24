@@ -35,7 +35,7 @@ class CreatePageJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info('CreatePageJob started for document: ' . $this->document->id);
+        Log::info('CreatePageJob started for document: '.$this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
             Log::info('Batch cancelled. Failing job.');
             $this->fail('Batch cancelled');
@@ -50,13 +50,13 @@ class CreatePageJob implements ShouldQueue
         $databaseId = $notionDatabase?->notion_id;
 
         if ($token === null) {
-            Log::error('No token found for source ' . $source?->id);
+            Log::error('No token found for source '.$source?->id);
             $this->release();
 
             return;
         }
         if ($databaseId === null) {
-            Log::error('No database id found for source ' . $source?->id);
+            Log::error('No database id found for source '.$source?->id);
             $this->release();
 
             return;
@@ -141,7 +141,7 @@ class CreatePageJob implements ShouldQueue
             // Check if executable exists and is executable
             if ($path === 'node' || (file_exists($path) && is_executable($path))) {
                 $nodePath = $path;
-                Log::info('Using Node.js at: ' . $nodePath);
+                Log::info('Using Node.js at: '.$nodePath);
                 break;
             }
         }
@@ -154,9 +154,10 @@ class CreatePageJob implements ShouldQueue
             throw new RuntimeException('Node.js not found in any expected location');
         }
 
+        // .js file paths need to be absolute in production, I guess because node is run from a different location.
         $cmd = $debugNode
-            ? $nodePath . ' --inspect-brk ' . base_path('cmd/notion-export/create.js') . ' ' . escapeshellarg($tempFile)
-            : $nodePath . ' ' . base_path('cmd/notion-export/create.js') . ' ' . escapeshellarg($tempFile);
+            ? $nodePath.' --inspect-brk '.base_path('cmd/notion-export/create.js').' '.escapeshellarg($tempFile)
+            : $nodePath.' '.base_path('cmd/notion-export/create.js').' '.escapeshellarg($tempFile);
 
         $process = Process::fromShellCommandline($cmd);
         $process->setTimeout($debugNode ? 600 : 120);
@@ -198,7 +199,7 @@ class CreatePageJob implements ShouldQueue
             }
         }
 
-        Log::info('CreatePageJob handled for document: ' . $this->document->id);
+        Log::info('CreatePageJob handled for document: '.$this->document->id);
     }
 
     public function parseStdout(string $stdout): void
