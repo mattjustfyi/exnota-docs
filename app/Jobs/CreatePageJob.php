@@ -35,7 +35,7 @@ class CreatePageJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::info('CreatePageJob started for document: ' . $this->document->id);
+        Log::info('CreatePageJob started for document: '.$this->document->id);
         if ($this->batch() !== null && $this->batch()->cancelled()) {
             Log::info('Batch cancelled. Failing job.');
             $this->fail('Batch cancelled');
@@ -50,13 +50,13 @@ class CreatePageJob implements ShouldQueue
         $databaseId = $notionDatabase?->notion_id;
 
         if ($token === null) {
-            Log::error('No token found for source ' . $source?->id);
+            Log::error('No token found for source '.$source?->id);
             $this->release();
 
             return;
         }
         if ($databaseId === null) {
-            Log::error('No database id found for source ' . $source?->id);
+            Log::error('No database id found for source '.$source?->id);
             $this->release();
 
             return;
@@ -100,12 +100,15 @@ class CreatePageJob implements ShouldQueue
 
         // Modify command to read from file instead of stdin
         // Try to find node executable from different possible locations
+        /** @var string[] $possibleNodePaths */
         $possibleNodePaths = [
-            env('NODE_PATH'), // First try environment variable if set
+            config('app.node_path'), // First try environment variable if set
             '/usr/local/bin/node',
             '/usr/bin/node',
+            // 2025-04-24: This finds node on manual EC2 install.
             '/home/exnota-docs/.nvm/versions/node/*/bin/node', // NVM installations
             '/opt/node/bin/node',
+            // This is used locally
             'node', // Last resort, try PATH
         ];
 
@@ -116,10 +119,13 @@ class CreatePageJob implements ShouldQueue
             }
 
             // Handle wildcard paths (like NVM)
-            if (strpos($path, '*') !== false) {
+            if (str_contains($path, '*')) {
                 $matchedPaths = glob($path);
-                if (!empty($matchedPaths)) {
+                if (! empty($matchedPaths)) {
                     // Use the latest version if multiple matches
+
+                    // Known phpstan issue: https://github.com/phpstan/phpstan/issues/6492
+                    /* @phpstan-ignore argument.type */
                     usort($matchedPaths, 'version_compare');
                     $path = end($matchedPaths);
                 } else {
@@ -128,14 +134,14 @@ class CreatePageJob implements ShouldQueue
             }
 
             // Skip if not an absolute path unless it's the default 'node'
-            if ($path !== 'node' && !str_starts_with($path, '/')) {
+            if ($path !== 'node' && ! str_starts_with($path, '/')) {
                 continue;
             }
 
             // Check if executable exists and is executable
             if ($path === 'node' || (file_exists($path) && is_executable($path))) {
                 $nodePath = $path;
-                Log::info('Using Node.js at: ' . $nodePath);
+                Log::info('Using Node.js at: '.$nodePath);
                 break;
             }
         }
@@ -143,14 +149,14 @@ class CreatePageJob implements ShouldQueue
         if ($nodePath === null) {
             Log::error('Node.js not found in any expected location', [
                 'PATH' => getenv('PATH'),
-                'tried_paths' => $possibleNodePaths
+                'tried_paths' => $possibleNodePaths,
             ]);
             throw new RuntimeException('Node.js not found in any expected location');
         }
 
         $cmd = $debugNode
-            ? $nodePath . ' --inspect-brk cmd/notion-export/create.js ' . escapeshellarg($tempFile)
-            : $nodePath . ' cmd/notion-export/create.js ' . escapeshellarg($tempFile);
+            ? $nodePath.' --inspect-brk cmd/notion-export/create.js '.escapeshellarg($tempFile)
+            : $nodePath.' cmd/notion-export/create.js '.escapeshellarg($tempFile);
 
         $process = Process::fromShellCommandline($cmd);
         $process->setTimeout($debugNode ? 600 : 120);
@@ -192,7 +198,7 @@ class CreatePageJob implements ShouldQueue
             }
         }
 
-        Log::info('CreatePageJob handled for document: ' . $this->document->id);
+        Log::info('CreatePageJob handled for document: '.$this->document->id);
     }
 
     public function parseStdout(string $stdout): void
