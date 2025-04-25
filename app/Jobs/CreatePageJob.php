@@ -85,7 +85,8 @@ class CreatePageJob implements ShouldQueue
             throw new RuntimeException('Failed to encode payload');
         }
 
-        // Write payload to temporary file instead of piping directly
+        // Write payload to temporary file instead of piping directly.
+        // Piping directly failed in production, for unknown reasons.
         $tempFile = tempnam(sys_get_temp_dir(), 'notion_payload_');
         if ($tempFile === false) {
             Log::error('Failed to create temporary file');
@@ -102,14 +103,14 @@ class CreatePageJob implements ShouldQueue
         // Try to find node executable from different possible locations
         /** @var string[] $possibleNodePaths */
         $possibleNodePaths = [
-            config('app.node_path'), // First try environment variable if set
+            config('app.node_path'),
             '/usr/local/bin/node',
             '/usr/bin/node',
             // 2025-04-24: This finds node on manual EC2 install.
-            '/home/exnota-docs/.nvm/versions/node/*/bin/node', // NVM installations
+            '/home/exnota-docs/.nvm/versions/node/*/bin/node',
             '/opt/node/bin/node',
             // This is used locally
-            'node', // Last resort, try PATH
+            'node',
         ];
 
         $nodePath = null;
@@ -154,7 +155,7 @@ class CreatePageJob implements ShouldQueue
             throw new RuntimeException('Node.js not found in any expected location');
         }
 
-        // .js file paths need to be absolute in production, I guess because node is run from a different location.
+        // .js file paths need to be absolute in production, I guess because node is not running from the working dir.
         $cmd = $debugNode
             ? $nodePath.' --inspect-brk '.base_path('cmd/notion-export/create.js').' '.escapeshellarg($tempFile)
             : $nodePath.' '.base_path('cmd/notion-export/create.js').' '.escapeshellarg($tempFile);
