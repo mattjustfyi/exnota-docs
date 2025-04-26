@@ -1,8 +1,8 @@
-# Rate Limits
+# Usage Limits
 
 ## Overview
 
-To ensure service stability and fair usage, our API implements rate limiting. These limits vary by endpoint and subscription tier.
+To ensure service stability and fair usage, our API implements various usage limits. These limits include rate limiting, data quotas, and concurrent request restrictions, varying by subscription tier.
 
 ## Rate Limit Structure
 
@@ -26,6 +26,16 @@ X-RateLimit-Reset: 1625160264
 - `X-RateLimit-Remaining`: Requests remaining in the current period
 - `X-RateLimit-Reset`: Unix timestamp when the rate limit resets
 
+## Data Quotas
+
+In addition to request limits, the following data quotas apply:
+
+| Plan | Storage limit | File upload size | Monthly bandwidth |
+|------|---------------|------------------|-------------------|
+| Free | 1 GB | 10 MB | 50 GB |
+| Professional | 50 GB | 100 MB | 500 GB |
+| Enterprise | 1 TB | 500 MB | 5 TB |
+
 ## Handling Rate Limiting
 
 When you exceed your rate limit, the API returns a `429 Too Many Requests` response with a JSON body:
@@ -46,6 +56,6 @@ When you exceed your rate limit, the API returns a `429 Too Many Requests` respo
 - Use bulk operations instead of multiple individual requests
 - Monitor your usage with our dashboard analytics
 
-## Rate Limit Increases
+## Usage Limit Increases
 
-Enterprise customers can request temporary rate limit increases for special events or migrations. Contact your account manager to discuss your needs.
+Enterprise customers can request temporary limit increases for special events or migrations. Contact your account manager to discuss your needs.
