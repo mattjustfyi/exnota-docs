@@ -8,7 +8,7 @@ To ensure service stability and fair usage, our API implements various usage lim
 
 | Plan | Requests per minute | Requests per day | Concurrent requests |
 |------|---------------------|------------------|---------------------|
-| Free | 60 | 5,000 | 5 |
+| Free | 70 | 5,000 | 5 |
 | Professional | 300 | 50,000 | 20 |
 | Enterprise | 1,200 | 500,000 | 50 |
 
