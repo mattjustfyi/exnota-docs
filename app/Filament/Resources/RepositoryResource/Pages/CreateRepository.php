@@ -8,4 +8,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateRepository extends CreateRecord
 {
     protected static string $resource = RepositoryResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
