@@ -101,12 +101,16 @@ class FolderBuilder
         // Define a list of common acronyms to capitalize
         $acronyms = ['API', 'HTTP', 'URL', 'ID', 'JSON', 'XML'];
 
-        // Split the name into words
-        $words = explode(' ', str_replace('_', ' ', $name));
+        // Replace dashes with spaces and split the name into words
+        $words = explode(' ', str_replace(['_', '-'], ' ', $name));
 
-        // Capitalize each word, handling acronyms
+        // Capitalize each word, handling acronyms and ensuring 'and' is lowercase
         $formattedWords = array_map(function ($word) use ($acronyms) {
-            return in_array(strtoupper($word), $acronyms, true) ? strtoupper($word) : ucfirst(strtolower($word));
+            $lowerWord = strtolower($word);
+            if ($lowerWord === 'and') {
+                return 'and';
+            }
+            return in_array(strtoupper($word), $acronyms, true) ? strtoupper($word) : ucfirst($lowerWord);
         }, $words);
 
         return implode(' ', $formattedWords);
