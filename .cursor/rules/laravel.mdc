@@ -34,6 +34,8 @@ PHP/Laravel
 Dependencies
 - Laravel (latest stable version)
 - Composer for dependency management
+- Filament for UI
+- Laravel Blueprint for model, factory, resource generation.
 
 Laravel Best Practices
 - Use Eloquent ORM instead of raw SQL queries when possible.
@@ -49,6 +51,7 @@ Laravel Best Practices
 - Implement proper database indexing for improved query performance.
 - Use Laravel's built-in pagination features.
 - Implement proper error logging and monitoring.
+- Use Laravel Blueprint for model, factory, resource generation and updates.
 
 Key Conventions
 1. Follow Laravel's MVC architecture.
