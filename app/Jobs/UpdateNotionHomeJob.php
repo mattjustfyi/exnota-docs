@@ -147,7 +147,7 @@ class UpdateNotionHomeJob implements ShouldQueue
             // Add empty paragraph for spacing and documentation heading
             $notionAppender
                 ->appendParagraph(' ')
-                ->appendHeading1('📚 Documentation')
+                ->appendHeading1('📚 Overview')
                 ->submit();
 
             // Root level - Add root heading and its files
