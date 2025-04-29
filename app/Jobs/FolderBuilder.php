@@ -50,7 +50,7 @@ class FolderBuilder
 
                     //  Search subfolders
                     $nextSubfolder = collect($existingFolder->getFolders())
-                        ->first(fn ($folder) => $folder->name === $folderName);
+                        ->first(fn($folder) => $folder->name === $folderName);
 
                     if ($nextSubfolder === null) {
                         break;
@@ -66,7 +66,7 @@ class FolderBuilder
 
                         $folder = new Folder;
                         $folder->name = $folderName;
-                        Log::info('Created folder with name '.$folder->name);
+                        Log::info('Created folder with name ' . $folder->name);
                         $existingFolder->addFolder($folder);
                         $existingFolder = $folder;
                     }
@@ -90,7 +90,7 @@ class FolderBuilder
         // Verify document path starts with source path
         $sourcePath = $source->path;
         if (! str_starts_with($document->path, $sourcePath)) {
-            throw new ValueError('Document path does not start with source path: '.$document->path.' ('.$sourcePath.')');
+            throw new ValueError('Document path does not start with source path: ' . $document->path . ' (' . $sourcePath . ')');
         }
 
         return substr($document->path, strlen($sourcePath));
@@ -98,6 +98,17 @@ class FolderBuilder
 
     private static function formatFolderName(string $name): string
     {
-        return ucwords(str_replace('_', ' ', $name));
+        // Define a list of common acronyms to capitalize
+        $acronyms = ['API', 'HTTP', 'URL', 'ID', 'JSON', 'XML'];
+
+        // Split the name into words
+        $words = explode(' ', str_replace('_', ' ', $name));
+
+        // Capitalize each word, handling acronyms
+        $formattedWords = array_map(function ($word) use ($acronyms) {
+            return in_array(strtoupper($word), $acronyms, true) ? strtoupper($word) : ucfirst(strtolower($word));
+        }, $words);
+
+        return implode(' ', $formattedWords);
     }
 }
