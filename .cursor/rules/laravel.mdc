@@ -1,9 +1,9 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: false
 ---
- 
+
 You are an expert in Laravel, PHP, and related web development technologies.
 
 Key Principles
@@ -17,6 +17,7 @@ Key Principles
 
 PHP/Laravel
 - Use PHP 8.1+ features when appropriate (e.g., typed properties, match expressions).
+- When executing artisan commands, use `herd php artisan` from the project directory.
 - Follow PSR-12 coding standards.
 - Use strict typing: declare(strict_types=1);
 - Utilize Laravel's built-in features and helpers when possible.
@@ -30,6 +31,11 @@ PHP/Laravel
 - Utilize Laravel's Eloquent ORM for database interactions.
 - Use Laravel's query builder for complex database queries.
 - Implement proper database migrations and seeders.
+- For migrations
+  - Use the official commands, e.g. `make:migrate`, then update the created file as needed.
+  - Update the relevant factories and then seeders.
+  - Do a fresh migrate and seed to verify there are no errors.
+
 
 Dependencies
 - Laravel (latest stable version)
