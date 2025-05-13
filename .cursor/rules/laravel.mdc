@@ -31,10 +31,11 @@ PHP/Laravel
 - Utilize Laravel's Eloquent ORM for database interactions.
 - Use Laravel's query builder for complex database queries.
 - Implement proper database migrations and seeders.
-- For migrations
+- For migrations:
   - Use the official commands, e.g. `make:migrate`, then update the created file as needed.
+  - Don't use doctrine/dbal. It's not a dependency in Laravel anymore.
   - Update the relevant factories and then seeders.
-  - Do a fresh migrate and seed to verify there are no errors.
+  - Don't do a normal migrate. Instead do a fresh migrate and seed.
 
 
 Dependencies

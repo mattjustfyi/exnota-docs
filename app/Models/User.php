@@ -27,6 +27,8 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'github_id',
+        'github_token',
+        'github_refresh_token',
     ];
 
     /**
@@ -37,6 +39,8 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+        'github_token',
+        'github_refresh_token',
     ];
 
     /**
@@ -49,6 +53,8 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'github_token' => 'encrypted',
+            'github_refresh_token' => 'encrypted',
         ];
     }
 

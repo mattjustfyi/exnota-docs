@@ -25,10 +25,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Shared
-        User::factory()->create([
+        $user = User::factory()->create([
             'name' => 'Matt',
             'email' => 'email@matt.fyi',
             'password' => Hash::make('password'),
+            'github_id' => 'test-github-id',
+            'github_token' => 'test-github-token',
+            'github_refresh_token' => 'test-github-refresh-token',
         ]);
 
         $workspace = NotionWorkspace::factory()->createOne([
@@ -46,7 +49,9 @@ class DatabaseSeeder extends Seeder
 
         $repository = Repository::factory()->create([
             'url' => 'https://api.github.com/repos/mttschltz/exnota-docs/contents',
-            'token' => config('services.github.token'),
+            // TODO: Not sure if this should be required. It certainly shouldn't be
+            // from config.
+            'token' => config('services.github.token') ?? 'dummy value',
         ]);
         Assert::isInstanceOf($repository, Repository::class);
 
@@ -92,7 +97,6 @@ class DatabaseSeeder extends Seeder
                     'path' => $pathWithoutFirstSlash,
                 ]);
         }
-
     }
 
     /**
@@ -112,7 +116,8 @@ class DatabaseSeeder extends Seeder
         ], $files);
 
         // Exclude files more than 2 subdirectories deep.
-        return array_filter($paths,
+        return array_filter(
+            $paths,
             callback:
             /**
              * @param  array<int, array{absolute: string, relative: string}>  $path
@@ -122,6 +127,7 @@ class DatabaseSeeder extends Seeder
 
                 // There is a leading `/` so <= 3 includes paths up to 2 subdirectories deep.
                 return substr_count($relativeFromSource, '/') <= 3;
-            });
+            }
+        );
     }
 }

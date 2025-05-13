@@ -31,6 +31,9 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'github_id' => fake()->uuid(),
+            // token and refresh_token are encrypted in the DB. See \app\Models\User
+            'github_token' => fake()->uuid(),
+            'github_refresh_token' => fake()->uuid(),
         ];
     }
 
