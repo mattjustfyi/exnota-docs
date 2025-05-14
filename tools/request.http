@@ -1,15 +1,95 @@
+### ----------------------
+### Auth: OAuth
+### ----------------------
+### 1/2 Github OAuth: First authorize link
+# Go to this URL manually and copy the `code` value on redirect
+GET https://github.com/login/oauth/authorize?client_id={{github.oauth.client-id}}&scope=repo
+
+### Github OAuth
+# 2/2 Put the code value here and submit
+POST https://github.com/login/oauth/access_token?code=223e0cc11bd75c1ed129&client_id={{github.oauth.client-id}}&
+    client_secret={{github.oauth.client-secret}}
+
+### ----------------------
+### Auth: App - install app
+### ----------------------
+# 1/3 Prepare request to get an access token: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-json-web-token-jwt-for-a-github-app
+# 2. Send request for an access token in below query
+# 2. Use that token as the Authorization: Bearer <value>
+#
+# To generate a token you need a JWT. Go to https://jwt.io/
+#
+# Under header, change "typ" to "RS256".
+#
+# Use this format for the payload:
+#{
+#  "iat": 1746492759,
+#  "exp": 1746492999,
+#  "iss": "Iv23li6VlSwmVqY3Zsjs"
+#}
+# For the PEM on jwt.io, the contents can be found in secrets (attached .pem file). This is NOT the secret for the Github App.
+#
+# To get the times for the payload:
+# 1. Copy the big, incrementing number at: https://www.unixtimestamp.com/
+# 2. Paste that as "iat" (time will elapse while doing these steps so it will be in the past)
+# 3. Paste it as "exp" but increment by less than 600 (10 minutes)
+#
+# Then submit the request to ../access_tokens.
+
+### 2/3: Github app: Request access token
+# Bearer = JST from above
+POST https://api.github.com/app/installations/65862682/access_tokens
+Accept: application/vnd.github+json
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NDY0OTI3NTksImV4cCI6MTc0NjQ5Mjk5OSwiaXNzIjoiSXYyM2xpNlZsU3dtVnFZM1pzanMifQ.zb9u2grxNND8O4H95LYLWN1e2PGO0kWeqXRQfk9tbt_Pj8B2KUfdhewJX8H0e6jLeUU462OArQX-FIVvzD3wHlPv7VHjeiQkAhaKADvOjsgniOZ9Ar-Dqb42pzXIDkK3EWaX8ezt86L8Q4FmUYrSiP2ZgnoUTnv-z-wawg9cUon4j4Eugfo46ZrpSNvxZ2tX6b6GwcOWNH9TgD10ogS0mIkghRA-NU-wA5YRM7cTk8s5_Smb1O3vpz-TUXZYRRV_6twiZCNe154Laco1c_OIZv072d9JhFH_FrMeC_1sXsJnow9pp_JVFqAcAI-RUaaBnhfLj-KRMTUjn4BqiWOtaQ
+X-GitHub-Api-Version: 2022-11-28
+
+### 3/3: Use access token as Bearer token in requests.
+
+### ----------------------
+### API endpoints
+### ----------------------
+
+### Get installations
+GET https://api.github.com/user/installations
+Accept: application/vnd.github+json
+Authorization: Bearer {{github.access-token}}
+X-GitHub-Api-Version: 2022-11-28
+
+### Get installation repositories
+GET https://api.github.com/user/installations/66038264/repositories
+Accept: application/vnd.github+json
+Authorization: Bearer {{github.access-token}}
+X-GitHub-Api-Version: 2022-11-28
+
+### Get user
+GET https://api.github.com/user
+Accept: application/vnd.github+json
+Authorization: Bearer {{github.access-token}}
+X-GitHub-Api-Version: 2022-11-28
+
+### Get user repos
+GET https://api.github.com/user/repos
+Accept: application/vnd.github+json
+Authorization: Bearer {{github.access-token}}
+X-GitHub-Api-Version: 2022-11-28
+
+### Github: List webhooks
+GET https://api.github.com/repos/exnota/exnota/hooks
+Accept: application/vnd.github+json
+Authorization: Bearer {{github.access-token}}
+X-GitHub-Api-Version: 2022-11-28
 
 ### Github: Get list of files
 GET https://api.github.com/repos/mttschltz/exnota-docs/contents/tests/Data/Docs/OneLevel
 Accept: application/vnd.github+json
-Authorization: Bearer {{github_token}}
+Authorization: Bearer {{github.access-token}}
 X-GitHub-Api-Version: 2022-11-28
 
 
 ### Github: Get file
 GET https://api.github.com/repos/mttschltz/exnota-docs/contents/tests/Data/Docs/OneLevel/README.md
 Accept: application/vnd.github+json
-Authorization: Bearer {{github_token}}
+Authorization: Bearer {{github.access-token}}
 X-GitHub-Api-Version: 2022-11-28
 
 ### Local webhook test
