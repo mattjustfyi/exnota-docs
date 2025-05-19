@@ -30,19 +30,21 @@ PHP/Laravel
 - Implement middleware for request filtering and modification.
 - Utilize Laravel's Eloquent ORM for database interactions.
 - Use Laravel's query builder for complex database queries.
-- Implement proper database migrations and seeders.
-- For migrations:
-  - Use the official commands, e.g. `make:migrate`, then update the created file as needed.
-  - Don't use doctrine/dbal. It's not a dependency in Laravel anymore.
+- When creating a new model:
+  - Use the official artisan `make` command and include a migration and factory.
+  - Add test data to database/seeders/DatabaseSeeder.php
+- When updating a model:
+  - Create a new migration file using official commands, e.g. `make:migrate`, and then update the file as needed.
   - Update the relevant factories and then seeders.
-  - Don't do a normal migrate. Instead do a fresh migrate and seed.
+- For all migrations:
+  - Don't use doctrine/dbal. It's not a dependency in Laravel anymore.
+  - When running the migration, do fresh migrate and seed.
 
 
 Dependencies
 - Laravel (latest stable version)
 - Composer for dependency management
 - Filament for UI
-- Laravel Blueprint for model, factory, resource generation.
 
 Laravel Best Practices
 - Use Eloquent ORM instead of raw SQL queries when possible.
@@ -58,7 +60,7 @@ Laravel Best Practices
 - Implement proper database indexing for improved query performance.
 - Use Laravel's built-in pagination features.
 - Implement proper error logging and monitoring.
-- Use Laravel Blueprint for model, factory, resource generation and updates.
+- For environment variables, create a config value and use `config()` to reference it. Don't use `env()` directly, other than in config files.
 
 Key Conventions
 1. Follow Laravel's MVC architecture.

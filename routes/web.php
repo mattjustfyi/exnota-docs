@@ -20,19 +20,36 @@ declare(strict_types=1);
 // seem to work.
 use App\Exceptions\GitHubAuthenticationException;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
+// Repository webhook route
 \Illuminate\Support\Facades\Route::webhooks('api/webhook/repository');
+
+// GitHub App webhook route
+\Illuminate\Support\Facades\Route::webhooks('api/webhook/github-app', 'github-app');
 
 \Illuminate\Support\Facades\Route::get('/auth/github/redirect', function () {
     return Socialite::driver('github')->redirect();
 });
 
 \Illuminate\Support\Facades\Route::get('/auth/github/callback', function () {
+    // Log request details
+    Log::info('GitHub OAuth callback received', [
+        'headers' => request()->headers->all(),
+        'query' => request()->query->all(),
+        'ip' => request()->ip(),
+        'userAgent' => request()->userAgent(),
+    ]);
+
     /** @var \Laravel\Socialite\Contracts\User $githubUser * */
     $githubUser = Socialite::driver('github')->user();
 
     if ($githubUser->email === null) {
+        Log::warning('GitHub authentication failed - no email', [
+            'github_id' => $githubUser->id,
+            'nickname' => $githubUser->nickname,
+        ]);
         throw new GitHubAuthenticationException('No email found in GitHub account. An email is required for registration.');
     }
 
@@ -43,6 +60,12 @@ use Laravel\Socialite\Facades\Socialite;
         'email' => $githubUser->email,
         'github_token' => $githubUser->token,
         'github_refresh_token' => $githubUser->refreshToken,
+    ]);
+
+    Log::info('GitHub authentication successful', [
+        'user_id' => $user->id,
+        'github_id' => $githubUser->id,
+        'email' => $user->email,
     ]);
 
     \Illuminate\Support\Facades\Auth::login($user);

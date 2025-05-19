@@ -10,6 +10,7 @@ use App\Models\NotionWorkspace;
 use App\Models\Repository;
 use App\Models\Source;
 use App\Models\User;
+use App\Models\WebhookEvent;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -33,6 +34,9 @@ class DatabaseSeeder extends Seeder
             'github_token' => 'test-github-token',
             'github_refresh_token' => 'test-github-refresh-token',
         ]);
+
+        // Create some sample webhook events
+        WebhookEvent::factory()->count(3)->create();
 
         $workspace = NotionWorkspace::factory()->createOne([
             'name' => 'Test Workspace',
@@ -110,7 +114,7 @@ class DatabaseSeeder extends Seeder
         $projectRelativePath = base_path();
 
         /** @var array<int, array{absolute: string, relative: string}>  $paths */
-        $paths = array_map(fn ($file) => [
+        $paths = array_map(fn($file) => [
             'absolute' => $file->getPathname(),
             'relative' => str_replace($projectRelativePath, '', $file->getPathname()),
         ], $files);
@@ -123,7 +127,7 @@ class DatabaseSeeder extends Seeder
              * @param  array<int, array{absolute: string, relative: string}>  $path
              */
             function (array $path) use ($sourcePath) {
-                $relativeFromSource = str_replace('/'.$sourcePath, '', $path['relative']);
+                $relativeFromSource = str_replace('/' . $sourcePath, '', $path['relative']);
 
                 // There is a leading `/` so <= 3 includes paths up to 2 subdirectories deep.
                 return substr_count($relativeFromSource, '/') <= 3;

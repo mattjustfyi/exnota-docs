@@ -39,6 +39,8 @@ return [
         'client_id' => env('GITHUB_CLIENT_ID'),
         'client_secret' => env('GITHUB_CLIENT_SECRET'),
         'redirect' => '/auth/github/callback',
+        'app_webhook_secret' => env('GITHUB_APP_WEBHOOK_SECRET'),
+        'webhook_secret' => env('WEBHOOK_CLIENT_SECRET'),
     ],
 
     'notion' => [
