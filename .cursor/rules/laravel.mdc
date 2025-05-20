@@ -16,7 +16,7 @@ Key Principles
 - Favor dependency injection and service containers.
 
 PHP/Laravel
-- Use PHP 8.1+ features when appropriate (e.g., typed properties, match expressions).
+- Use PHP 8.3 features when appropriate (e.g., typed properties, match expressions).
 - When executing artisan commands, use `herd php artisan` from the project directory.
 - Follow PSR-12 coding standards.
 - Use strict typing: declare(strict_types=1);
