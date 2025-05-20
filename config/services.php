@@ -41,6 +41,7 @@ return [
         'redirect' => '/auth/github/callback',
         'app_webhook_secret' => env('GITHUB_APP_WEBHOOK_SECRET'),
         'webhook_secret' => env('WEBHOOK_CLIENT_SECRET'),
+        'app_install_url' => env('GITHUB_APP_INSTALL_URL'),
     ],
 
     'notion' => [

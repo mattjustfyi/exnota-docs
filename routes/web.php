@@ -53,14 +53,19 @@ use Laravel\Socialite\Facades\Socialite;
         throw new GitHubAuthenticationException('No email found in GitHub account. An email is required for registration.');
     }
 
+    /** @noinspection PhpPossiblePolymorphicInvocationInspection */
     $user = User::updateOrCreate([
         'github_id' => $githubUser->id,
     ], [
         'name' => $githubUser->name ?? $githubUser->nickname,
         'email' => $githubUser->email,
         'github_token' => $githubUser->token,
-        'github_refresh_token' => $githubUser->refreshToken,
-    ]);
+        // Tokens won't expire unless the feature is enabled: "User access tokens that expire are currently an optional feature and are subject to change."
+        //
+        // So this will be null for now.
+        //
+        // See: https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app#about-user-access-tokens
+        'github_refresh_token' => $githubUser->refreshToken,    ]);
 
     Log::info('GitHub authentication successful', [
         'user_id' => $user->id,
@@ -71,4 +76,11 @@ use Laravel\Socialite\Facades\Socialite;
     \Illuminate\Support\Facades\Auth::login($user);
 
     return redirect('/dashboard');
+});
+
+// GitHub App installation route
+\Illuminate\Support\Facades\Route::get('/install/github/redirect', function () {
+    $installUrl = config('services.github.app_install_url');
+
+    return redirect($installUrl.'?state=test-123');
 });
