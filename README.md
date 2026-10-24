@@ -1,3 +1,5 @@
+# Exnota Docs
+
 Notion + Docs as Code!
 
 Sync markdown docs from your repo to Notion, where other teams can read them.
