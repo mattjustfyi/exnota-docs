@@ -1,3 +1,11 @@
+Notion + Docs as Code!
+
+Sync markdown docs from your repo to Notion, where other teams can read them.
+
+<img src="/docs/git-to-notion.gif">
+
+[Full walkthrough](https://www.youtube.com/watch?v=k9gnzNbSCgs)
+
 <!-- TOC -->
 * [Exnota Docs](#exnota-docs)
   * [Useful commands](#useful-commands)
