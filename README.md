@@ -4,9 +4,11 @@ Notion + Docs as Code!
 
 Sync markdown docs from your repo to Notion, where other teams can read them.
 
-<img src="/docs/git-to-notion.gif" width="600">
+<img src="/docs/git-to-notion.gif" width="600"><br>[Full walkthrough](https://www.youtube.com/watch?v=k9gnzNbSCgs)
 
-[Full walkthrough](https://www.youtube.com/watch?v=k9gnzNbSCgs)
+<br>
+
+## TOC
 
 <!-- TOC -->
 * [Exnota Docs](#exnota-docs)
@@ -35,8 +37,6 @@ Sync markdown docs from your repo to Notion, where other teams can read them.
   * [Troubleshooting](#troubleshooting)
     * [Property hooks and debugging](#property-hooks-and-debugging)
 <!-- TOC -->
-
-# Exnota Docs
 
 ## Useful commands
 
